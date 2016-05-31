@@ -22,8 +22,6 @@
  *
  *  History:
  *   0.1  04.01.2000  Created
- *
- *  $Id: usbdevice_fs.h,v 1.1 2000/01/06 18:40:41 tom Exp $
  */
 
 /*****************************************************************************/
@@ -32,19 +30,18 @@
 #define _LINUX_USBDEVICE_FS_H
 
 #include <linux/types.h>
+#include <linux/magic.h>
 
 /* --------------------------------------------------------------------- */
-
-#define USBDEVICE_SUPER_MAGIC 0x9fa2
 
 /* usbdevfs ioctl codes */
 
 struct usbdevfs_ctrltransfer {
-	__u8 requesttype;
-	__u8 request;
-	__u16 value;
-	__u16 index;
-	__u16 length;
+	__u8 bRequestType;
+	__u8 bRequest;
+	__u16 wValue;
+	__u16 wIndex;
+	__u16 wLength;
 	__u32 timeout;  /* in milliseconds */
  	void *data;
 };
@@ -78,9 +75,12 @@ struct usbdevfs_connectinfo {
 	unsigned char slow;
 };
 
-#define USBDEVFS_URB_DISABLE_SPD           1
-#define USBDEVFS_URB_ISO_ASAP              2
-#define USBDEVFS_URB_QUEUE_BULK            0x10
+#define USBDEVFS_URB_SHORT_NOT_OK	0x01
+#define USBDEVFS_URB_ISO_ASAP		0x02
+#define USBDEVFS_URB_BULK_CONTINUATION	0x04
+#define USBDEVFS_URB_NO_FSBR		0x20
+#define USBDEVFS_URB_ZERO_PACKET	0x40
+#define USBDEVFS_URB_NO_INTERRUPT	0x80
 
 #define USBDEVFS_URB_TYPE_ISO		   0
 #define USBDEVFS_URB_TYPE_INTERRUPT	   1
@@ -102,19 +102,23 @@ struct usbdevfs_urb {
 	int buffer_length;
 	int actual_length;
 	int start_frame;
-	int number_of_packets;
+	union {
+		int number_of_packets;	/* Only used for isoc urbs */
+		unsigned int stream_id;	/* Only used with bulk streams */
+	};
 	int error_count;
-	unsigned int signr;  /* signal to be sent on error, -1 if none should be sent */
+	unsigned int signr;	/* signal to be sent on completion,
+				  or 0 if none should be sent. */
 	void *usercontext;
 	struct usbdevfs_iso_packet_desc iso_frame_desc[0];
 };
 
-/* ioctls for talking to drivers in the usbcore module: */
+/* ioctls for talking directly to drivers */
 struct usbdevfs_ioctl {
 	int	ifno;		/* interface 0..N ; negative numbers reserved */
 	int	ioctl_code;	/* MUST encode size + direction of data so the
 				 * macros in <asm/ioctl.h> give correct values */
-	void	*data;		/* param buffer (in, or out) */
+	void *data;	/* param buffer (in, or out) */
 };
 
 /* You can do most things with hubs just through control messages,
@@ -124,72 +128,64 @@ struct usbdevfs_hub_portinfo {
 	char port [127];	/* e.g. port 3 connects to device 27 */
 };
 
+/* System and bus capability flags */
+#define USBDEVFS_CAP_ZERO_PACKET		0x01
+#define USBDEVFS_CAP_BULK_CONTINUATION		0x02
+#define USBDEVFS_CAP_NO_PACKET_SIZE_LIM		0x04
+#define USBDEVFS_CAP_BULK_SCATTER_GATHER	0x08
+#define USBDEVFS_CAP_REAP_AFTER_DISCONNECT	0x10
+
+/* USBDEVFS_DISCONNECT_CLAIM flags & struct */
+
+/* disconnect-and-claim if the driver matches the driver field */
+#define USBDEVFS_DISCONNECT_CLAIM_IF_DRIVER	0x01
+/* disconnect-and-claim except when the driver matches the driver field */
+#define USBDEVFS_DISCONNECT_CLAIM_EXCEPT_DRIVER	0x02
+
+struct usbdevfs_disconnect_claim {
+	unsigned int interface;
+	unsigned int flags;
+	char driver[USBDEVFS_MAXDRIVERNAME + 1];
+};
+
+struct usbdevfs_streams {
+	unsigned int num_streams; /* Not used by USBDEVFS_FREE_STREAMS */
+	unsigned int num_eps;
+	unsigned char eps[0];
+};
+
 #define USBDEVFS_CONTROL           _IOWR('U', 0, struct usbdevfs_ctrltransfer)
+#define USBDEVFS_CONTROL32           _IOWR('U', 0, struct usbdevfs_ctrltransfer32)
 #define USBDEVFS_BULK              _IOWR('U', 2, struct usbdevfs_bulktransfer)
+#define USBDEVFS_BULK32              _IOWR('U', 2, struct usbdevfs_bulktransfer32)
 #define USBDEVFS_RESETEP           _IOR('U', 3, unsigned int)
 #define USBDEVFS_SETINTERFACE      _IOR('U', 4, struct usbdevfs_setinterface)
 #define USBDEVFS_SETCONFIGURATION  _IOR('U', 5, unsigned int)
 #define USBDEVFS_GETDRIVER         _IOW('U', 8, struct usbdevfs_getdriver)
 #define USBDEVFS_SUBMITURB         _IOR('U', 10, struct usbdevfs_urb)
+#define USBDEVFS_SUBMITURB32       _IOR('U', 10, struct usbdevfs_urb32)
 #define USBDEVFS_DISCARDURB        _IO('U', 11)
 #define USBDEVFS_REAPURB           _IOW('U', 12, void *)
+#define USBDEVFS_REAPURB32         _IOW('U', 12, __u32)
 #define USBDEVFS_REAPURBNDELAY     _IOW('U', 13, void *)
+#define USBDEVFS_REAPURBNDELAY32   _IOW('U', 13, __u32)
 #define USBDEVFS_DISCSIGNAL        _IOR('U', 14, struct usbdevfs_disconnectsignal)
+#define USBDEVFS_DISCSIGNAL32      _IOR('U', 14, struct usbdevfs_disconnectsignal32)
 #define USBDEVFS_CLAIMINTERFACE    _IOR('U', 15, unsigned int)
 #define USBDEVFS_RELEASEINTERFACE  _IOR('U', 16, unsigned int)
 #define USBDEVFS_CONNECTINFO       _IOW('U', 17, struct usbdevfs_connectinfo)
 #define USBDEVFS_IOCTL             _IOWR('U', 18, struct usbdevfs_ioctl)
+#define USBDEVFS_IOCTL32           _IOWR('U', 18, struct usbdevfs_ioctl32)
 #define USBDEVFS_HUB_PORTINFO      _IOR('U', 19, struct usbdevfs_hub_portinfo)
 #define USBDEVFS_RESET             _IO('U', 20)
 #define USBDEVFS_CLEAR_HALT        _IOR('U', 21, unsigned int)
 #define USBDEVFS_DISCONNECT        _IO('U', 22)
 #define USBDEVFS_CONNECT           _IO('U', 23)
+#define USBDEVFS_CLAIM_PORT        _IOR('U', 24, unsigned int)
+#define USBDEVFS_RELEASE_PORT      _IOR('U', 25, unsigned int)
+#define USBDEVFS_GET_CAPABILITIES  _IOR('U', 26, __u32)
+#define USBDEVFS_DISCONNECT_CLAIM  _IOR('U', 27, struct usbdevfs_disconnect_claim)
+#define USBDEVFS_ALLOC_STREAMS     _IOR('U', 28, struct usbdevfs_streams)
+#define USBDEVFS_FREE_STREAMS      _IOR('U', 29, struct usbdevfs_streams)
 
-/* --------------------------------------------------------------------- */
-
-#ifdef __KERNEL__
-
-#include <linux/list.h>
-#include <asm/semaphore.h>
-
-/*
- * inode number macros
- */
-#define ITYPE(x)   ((x)&(0xf<<28))
-#define ISPECIAL   (0<<28)
-#define IBUS       (1<<28)
-#define IDEVICE    (2<<28)
-#define IBUSNR(x)  (((x)>>8)&0xff)
-#define IDEVNR(x)  ((x)&0xff)
-
-#define IROOT      1
-
-struct dev_state {
-	struct list_head list;      /* state list */
-	struct rw_semaphore devsem; /* protects modifications to dev (dev == NULL indicating disconnect) */ 
-	struct usb_device *dev;
-	struct file *file;
-	spinlock_t lock;            /* protects the async urb lists */
-	struct list_head async_pending;
-	struct list_head async_completed;
-	wait_queue_head_t wait;     /* wake up if a request completed */
-	unsigned int discsignr;
-	struct task_struct *disctask;
-	void *disccontext;
-	unsigned long ifclaimed;
-};
-
-/* internal methods & data */
-extern struct usb_driver usbdevfs_driver;
-extern struct file_operations usbdevfs_drivers_fops;
-extern struct file_operations usbdevfs_devices_fops;
-extern struct file_operations usbdevfs_device_file_operations;
-extern struct inode_operations usbdevfs_device_inode_operations;
-extern struct inode_operations usbdevfs_bus_inode_operations;
-extern struct file_operations usbdevfs_bus_file_operations;
-extern void usbdevfs_conn_disc_event(void);
-
-#endif /* __KERNEL__ */
-
-/* --------------------------------------------------------------------- */
 #endif /* _LINUX_USBDEVICE_FS_H */

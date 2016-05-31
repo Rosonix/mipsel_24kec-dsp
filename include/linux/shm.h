@@ -2,20 +2,23 @@
 #define _LINUX_SHM_H_
 
 #include <linux/ipc.h>
-#include <asm/page.h>
+#include <linux/errno.h>
+#include <unistd.h>
 
 /*
- * SHMMAX, SHMMNI and SHMALL are upper limits are defaults which can
- * be increased by sysctl
+ * SHMMNI, SHMMAX and SHMALL are default upper limits which can be
+ * modified by sysctl. The SHMMAX and SHMALL values have been chosen to
+ * be as large possible without facilitating scenarios where userspace
+ * causes overflows when adjusting the limits via operations of the form
+ * "retrieve current limit; add X; update limit". It is therefore not
+ * advised to make SHMMAX and SHMALL any larger. These limits are
+ * suitable for both 32 and 64-bit systems.
  */
-
-#define SHMMAX 0x2000000		 /* max shared seg size (bytes) */
 #define SHMMIN 1			 /* min shared seg size (bytes) */
 #define SHMMNI 4096			 /* max num of segs system wide */
-#define SHMALL (SHMMAX/PAGE_SIZE*(SHMMNI/16)) /* max shm system wide (pages) */
+#define SHMMAX (ULONG_MAX - (1UL << 24)) /* max shared seg size (bytes) */
+#define SHMALL (ULONG_MAX - (1UL << 24)) /* max shm system wide (pages) */
 #define SHMSEG SHMMNI			 /* max shared segs per process */
-
-#include <asm/shmparam.h>
 
 /* Obsolete, used only for backwards compatibility and libc5 compiles */
 struct shmid_ds {
@@ -43,6 +46,7 @@ struct shmid_ds {
 #define	SHM_RDONLY	010000	/* read-only access */
 #define	SHM_RND		020000	/* round attach address to SHMLBA boundary */
 #define	SHM_REMAP	040000	/* take-over region on attach */
+#define	SHM_EXEC	0100000	/* execution access */
 
 /* super user shmctl commands */
 #define SHM_LOCK 	11
@@ -63,25 +67,12 @@ struct	shminfo {
 
 struct shm_info {
 	int used_ids;
-	unsigned long shm_tot;	/* total allocated shm */
-	unsigned long shm_rss;	/* total resident shm */
-	unsigned long shm_swp;	/* total swapped shm */
-	unsigned long swap_attempts;
-	unsigned long swap_successes;
+	__kernel_ulong_t shm_tot;	/* total allocated shm */
+	__kernel_ulong_t shm_rss;	/* total resident shm */
+	__kernel_ulong_t shm_swp;	/* total swapped shm */
+	__kernel_ulong_t swap_attempts;
+	__kernel_ulong_t swap_successes;
 };
 
-#ifdef __KERNEL__
-
-/* shm_mode upper byte flags */
-#define	SHM_DEST	01000	/* segment will be destroyed on last detach */
-#define SHM_LOCKED      02000   /* segment will not be swapped */
-
-asmlinkage long sys_shmget (key_t key, size_t size, int flag);
-asmlinkage long sys_shmat (int shmid, char *shmaddr, int shmflg, unsigned long *addr);
-asmlinkage long sys_shmdt (char *shmaddr);
-asmlinkage long sys_shmctl (int shmid, int cmd, struct shmid_ds *buf);
-extern void shm_unuse(swp_entry_t entry, struct page *page);
-
-#endif /* __KERNEL__ */
 
 #endif /* _LINUX_SHM_H_ */

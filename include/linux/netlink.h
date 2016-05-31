@@ -1,35 +1,50 @@
 #ifndef __LINUX_NETLINK_H
 #define __LINUX_NETLINK_H
 
+#include <linux/kernel.h>
+#include <linux/socket.h> /* for __kernel_sa_family_t */
+#include <linux/types.h>
+
 #define NETLINK_ROUTE		0	/* Routing/device hook				*/
-#define NETLINK_SKIP		1	/* Reserved for ENskip  			*/
+#define NETLINK_UNUSED		1	/* Unused number				*/
 #define NETLINK_USERSOCK	2	/* Reserved for user mode socket protocols 	*/
-#define NETLINK_FIREWALL	3	/* Firewalling hook				*/
-#define NETLINK_TCPDIAG		4	/* TCP socket monitoring			*/
+#define NETLINK_FIREWALL	3	/* Unused number, formerly ip_queue		*/
+#define NETLINK_SOCK_DIAG	4	/* socket monitoring				*/
 #define NETLINK_NFLOG		5	/* netfilter/iptables ULOG */
-#define NETLINK_ARPD		8
-#define NETLINK_ROUTE6		11	/* af_inet6 route comm channel */
+#define NETLINK_XFRM		6	/* ipsec */
+#define NETLINK_SELINUX		7	/* SELinux event notifications */
+#define NETLINK_ISCSI		8	/* Open-iSCSI */
+#define NETLINK_AUDIT		9	/* auditing */
+#define NETLINK_FIB_LOOKUP	10	
+#define NETLINK_CONNECTOR	11
+#define NETLINK_NETFILTER	12	/* netfilter subsystem */
 #define NETLINK_IP6_FW		13
 #define NETLINK_DNRTMSG		14	/* DECnet routing messages */
-#define NETLINK_TAPBASE		16	/* 16 to 31 are ethertap */
+#define NETLINK_KOBJECT_UEVENT	15	/* Kernel messages to userspace */
+#define NETLINK_GENERIC		16
+/* leave room for NETLINK_DM (DM Events) */
+#define NETLINK_SCSITRANSPORT	18	/* SCSI Transports */
+#define NETLINK_ECRYPTFS	19
+#define NETLINK_RDMA		20
+#define NETLINK_CRYPTO		21	/* Crypto layer */
+
+#define NETLINK_INET_DIAG	NETLINK_SOCK_DIAG
 
 #define MAX_LINKS 32		
 
-struct sockaddr_nl
-{
-	sa_family_t	nl_family;	/* AF_NETLINK	*/
+struct sockaddr_nl {
+	__kernel_sa_family_t	nl_family;	/* AF_NETLINK	*/
 	unsigned short	nl_pad;		/* zero		*/
-	__u32		nl_pid;		/* process pid	*/
+	__u32		nl_pid;		/* port ID	*/
        	__u32		nl_groups;	/* multicast groups mask */
 };
 
-struct nlmsghdr
-{
+struct nlmsghdr {
 	__u32		nlmsg_len;	/* Length of message including header */
 	__u16		nlmsg_type;	/* Message content */
 	__u16		nlmsg_flags;	/* Additional flags */
 	__u32		nlmsg_seq;	/* Sequence number */
-	__u32		nlmsg_pid;	/* Sending process PID */
+	__u32		nlmsg_pid;	/* Sending process port ID */
 };
 
 /* Flags values */
@@ -38,6 +53,7 @@ struct nlmsghdr
 #define NLM_F_MULTI		2	/* Multipart message, terminated by NLMSG_DONE */
 #define NLM_F_ACK		4	/* Reply with ack, with zero or error code */
 #define NLM_F_ECHO		8	/* Echo this request 		*/
+#define NLM_F_DUMP_INTR		16	/* Dump was inconsistent due to sequence change */
 
 /* Modifiers to GET request */
 #define NLM_F_ROOT	0x100	/* specify tree	root	*/
@@ -60,9 +76,10 @@ struct nlmsghdr
    Check		NLM_F_EXCL
  */
 
-#define NLMSG_ALIGNTO	4
+#define NLMSG_ALIGNTO	4U
 #define NLMSG_ALIGN(len) ( ((len)+NLMSG_ALIGNTO-1) & ~(NLMSG_ALIGNTO-1) )
-#define NLMSG_LENGTH(len) ((len)+NLMSG_ALIGN(sizeof(struct nlmsghdr)))
+#define NLMSG_HDRLEN	 ((int) NLMSG_ALIGN(sizeof(struct nlmsghdr)))
+#define NLMSG_LENGTH(len) ((len) + NLMSG_HDRLEN)
 #define NLMSG_SPACE(len) NLMSG_ALIGN(NLMSG_LENGTH(len))
 #define NLMSG_DATA(nlh)  ((void*)(((char*)nlh) + NLMSG_LENGTH(0)))
 #define NLMSG_NEXT(nlh,len)	 ((len) -= NLMSG_ALIGN((nlh)->nlmsg_len), \
@@ -77,96 +94,92 @@ struct nlmsghdr
 #define NLMSG_DONE		0x3	/* End of a dump	*/
 #define NLMSG_OVERRUN		0x4	/* Data lost		*/
 
-struct nlmsgerr
-{
+#define NLMSG_MIN_TYPE		0x10	/* < 0x10: reserved control messages */
+
+struct nlmsgerr {
 	int		error;
 	struct nlmsghdr msg;
 };
 
+#define NETLINK_ADD_MEMBERSHIP	1
+#define NETLINK_DROP_MEMBERSHIP	2
+#define NETLINK_PKTINFO		3
+#define NETLINK_BROADCAST_ERROR	4
+#define NETLINK_NO_ENOBUFS	5
+#define NETLINK_RX_RING		6
+#define NETLINK_TX_RING		7
+
+struct nl_pktinfo {
+	__u32	group;
+};
+
+struct nl_mmap_req {
+	unsigned int	nm_block_size;
+	unsigned int	nm_block_nr;
+	unsigned int	nm_frame_size;
+	unsigned int	nm_frame_nr;
+};
+
+struct nl_mmap_hdr {
+	unsigned int	nm_status;
+	unsigned int	nm_len;
+	__u32		nm_group;
+	/* credentials */
+	__u32		nm_pid;
+	__u32		nm_uid;
+	__u32		nm_gid;
+};
+
+enum nl_mmap_status {
+	NL_MMAP_STATUS_UNUSED,
+	NL_MMAP_STATUS_RESERVED,
+	NL_MMAP_STATUS_VALID,
+	NL_MMAP_STATUS_COPY,
+	NL_MMAP_STATUS_SKIP,
+};
+
+#define NL_MMAP_MSG_ALIGNMENT		NLMSG_ALIGNTO
+#define NL_MMAP_MSG_ALIGN(sz)		__ALIGN_KERNEL(sz, NL_MMAP_MSG_ALIGNMENT)
+#define NL_MMAP_HDRLEN			NL_MMAP_MSG_ALIGN(sizeof(struct nl_mmap_hdr))
+
 #define NET_MAJOR 36		/* Major 36 is reserved for networking 						*/
 
-#ifdef __KERNEL__
-
-struct netlink_skb_parms
-{
-	struct ucred		creds;		/* Skb credentials	*/
-	__u32			pid;
-	__u32			groups;
-	__u32			dst_pid;
-	__u32			dst_groups;
-	kernel_cap_t		eff_cap;
+enum {
+	NETLINK_UNCONNECTED = 0,
+	NETLINK_CONNECTED,
 };
-
-#define NETLINK_CB(skb)		(*(struct netlink_skb_parms*)&((skb)->cb))
-#define NETLINK_CREDS(skb)	(&NETLINK_CB((skb)).creds)
-
-
-extern int netlink_attach(int unit, int (*function)(int,struct sk_buff *skb));
-extern void netlink_detach(int unit);
-extern int netlink_post(int unit, struct sk_buff *skb);
-extern int init_netlink(void);
-extern struct sock *netlink_kernel_create(int unit, void (*input)(struct sock *sk, int len));
-extern void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err);
-extern int netlink_unicast(struct sock *ssk, struct sk_buff *skb, __u32 pid, int nonblock);
-extern void netlink_broadcast(struct sock *ssk, struct sk_buff *skb, __u32 pid,
-			      __u32 group, int allocation);
-extern void netlink_set_err(struct sock *ssk, __u32 pid, __u32 group, int code);
-extern int netlink_register_notifier(struct notifier_block *nb);
-extern int netlink_unregister_notifier(struct notifier_block *nb);
-extern int netlink_proto_init(void);
 
 /*
- *	skb should fit one page. This choice is good for headerless malloc.
+ *  <------- NLA_HDRLEN ------> <-- NLA_ALIGN(payload)-->
+ * +---------------------+- - -+- - - - - - - - - -+- - -+
+ * |        Header       | Pad |     Payload       | Pad |
+ * |   (struct nlattr)   | ing |                   | ing |
+ * +---------------------+- - -+- - - - - - - - - -+- - -+
+ *  <-------------- nlattr->nla_len -------------->
  */
-#define NLMSG_GOODORDER 0
-#define NLMSG_GOODSIZE (SKB_MAX_ORDER(0, NLMSG_GOODORDER))
 
-
-struct netlink_callback
-{
-	struct sk_buff	*skb;
-	struct nlmsghdr	*nlh;
-	int		(*dump)(struct sk_buff * skb, struct netlink_callback *cb);
-	int		(*done)(struct netlink_callback *cb);
-	int		family;
-	long		args[4];
+struct nlattr {
+	__u16           nla_len;
+	__u16           nla_type;
 };
 
-struct netlink_notify
-{
-	int pid;
-	int protocol;
-};
+/*
+ * nla_type (16 bits)
+ * +---+---+-------------------------------+
+ * | N | O | Attribute Type                |
+ * +---+---+-------------------------------+
+ * N := Carries nested attributes
+ * O := Payload stored in network byte order
+ *
+ * Note: The N and O flag are mutually exclusive.
+ */
+#define NLA_F_NESTED		(1 << 15)
+#define NLA_F_NET_BYTEORDER	(1 << 14)
+#define NLA_TYPE_MASK		~(NLA_F_NESTED | NLA_F_NET_BYTEORDER)
 
-static __inline__ struct nlmsghdr *
-__nlmsg_put(struct sk_buff *skb, u32 pid, u32 seq, int type, int len)
-{
-	struct nlmsghdr *nlh;
-	int size = NLMSG_LENGTH(len);
-
-	nlh = (struct nlmsghdr*)skb_put(skb, NLMSG_ALIGN(size));
-	nlh->nlmsg_type = type;
-	nlh->nlmsg_len = size;
-	nlh->nlmsg_flags = 0;
-	nlh->nlmsg_pid = pid;
-	nlh->nlmsg_seq = seq;
-	return nlh;
-}
-
-#define NLMSG_PUT(skb, pid, seq, type, len) \
-({ if (skb_tailroom(skb) < (int)NLMSG_SPACE(len)) goto nlmsg_failure; \
-   __nlmsg_put(skb, pid, seq, type, len); })
-
-extern int netlink_dump_start(struct sock *ssk, struct sk_buff *skb,
-			      struct nlmsghdr *nlh,
-			      int (*dump)(struct sk_buff *skb, struct netlink_callback*),
-			      int (*done)(struct netlink_callback*));
-
-#define NL_NONROOT_RECV 0x1
-#define NL_NONROOT_SEND 0x2
-extern void netlink_set_nonroot(int protocol, unsigned flag);
+#define NLA_ALIGNTO		4
+#define NLA_ALIGN(len)		(((len) + NLA_ALIGNTO - 1) & ~(NLA_ALIGNTO - 1))
+#define NLA_HDRLEN		((int) NLA_ALIGN(sizeof(struct nlattr)))
 
 
-#endif /* __KERNEL__ */
-
-#endif	/* __LINUX_NETLINK_H */
+#endif /* __LINUX_NETLINK_H */

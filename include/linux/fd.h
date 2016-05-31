@@ -3,6 +3,7 @@
 
 #include <linux/ioctl.h>
 
+
 /* New file layout: Now the ioctl definitions immediately follow the
  * definitions of the structures that they use */
 
@@ -14,9 +15,16 @@ struct floppy_struct {
 			sect,		/* sectors per track */
 			head,		/* nr of heads */
 			track,		/* nr of tracks */
-			stretch;	/* !=0 means double track steps */
+			stretch;	/* bit 0 !=0 means double track steps */
+					/* bit 1 != 0 means swap sides */
+					/* bits 2..9 give the first sector */
+					/*  number (the LSB is flipped) */
 #define FD_STRETCH 1
 #define FD_SWAPSIDES 2
+#define FD_ZEROBASED 4
+#define FD_SECTBASEMASK 0x3FC
+#define FD_MKSECTBASE(s) (((s) ^ 1) << 2)
+#define FD_SECTBASE(floppy) ((((floppy)->stretch & FD_SECTBASEMASK) >> 2) ^ 1)
 
 	unsigned char	gap,		/* gap1 size */
 
@@ -177,7 +185,8 @@ enum {
 				 * to clear media change status */
 	FD_UNUSED_BIT,
 	FD_DISK_CHANGED_BIT,	/* disk has been changed since last i/o */
-	FD_DISK_WRITABLE_BIT	/* disk is writable */
+	FD_DISK_WRITABLE_BIT,	/* disk is writable */
+	FD_OPEN_SHOULD_FAIL_BIT
 };
 
 #define FDSETDRVPRM _IOW(2, 0x90, struct floppy_drive_params)
@@ -369,4 +378,6 @@ struct floppy_raw_cmd {
 #define FDEJECT _IO(2, 0x5a)
 /* eject the disk */
 
-#endif
+
+
+#endif /* _LINUX_FD_H */

@@ -1,5 +1,6 @@
 /* Declarations of socket constants, types, and functions.
-   Copyright (C) 1991,92,1994-1999,2000,2001 Free Software Foundation, Inc.
+   Copyright (C) 1991,92,1994-2001,2003,2005,2007,2008
+   Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -27,6 +28,10 @@ __BEGIN_DECLS
 #include <sys/uio.h>
 #define	__need_size_t
 #include <stddef.h>
+#ifdef __USE_GNU
+/* Get the __sigset_t definition.  */
+# include <bits/sigset.h>
+#endif
 
 
 /* This operating system-specific header file defines the SOCK_*, PF_*,
@@ -117,9 +122,11 @@ extern int getsockname (int __fd, __SOCKADDR_ARG __addr,
 /* Open a connection on socket FD to peer at ADDR (which LEN bytes long).
    For connectionless socket types, just set the default address to send to
    and the only address from which to accept transmissions.
-   Return 0 on success, -1 for errors.  */
-extern int connect (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len)
-     __THROW;
+   Return 0 on success, -1 for errors.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+extern int connect (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len);
 
 /* Put the address of the peer connected to socket FD into *ADDR
    (which is *LEN bytes long), and its actual length into *LEN.  */
@@ -127,39 +134,54 @@ extern int getpeername (int __fd, __SOCKADDR_ARG __addr,
 			socklen_t *__restrict __len) __THROW;
 
 
-/* Send N bytes of BUF to socket FD.  Returns the number sent or -1.  */
-extern ssize_t send (int __fd, __const void *__buf, size_t __n, int __flags)
-     __THROW;
+/* Send N bytes of BUF to socket FD.  Returns the number sent or -1.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+extern ssize_t send (int __fd, __const void *__buf, size_t __n, int __flags);
 
 /* Read N bytes into BUF from socket FD.
-   Returns the number read or -1 for errors.  */
-extern ssize_t recv (int __fd, void *__buf, size_t __n, int __flags)
-     __THROW;
+   Returns the number read or -1 for errors.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+extern ssize_t recv (int __fd, void *__buf, size_t __n, int __flags);
 
 /* Send N bytes of BUF on socket FD to peer at address ADDR (which is
-   ADDR_LEN bytes long).  Returns the number sent, or -1 for errors.  */
+   ADDR_LEN bytes long).  Returns the number sent, or -1 for errors.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
 extern ssize_t sendto (int __fd, __const void *__buf, size_t __n,
 		       int __flags, __CONST_SOCKADDR_ARG __addr,
-		       socklen_t __addr_len) __THROW;
+		       socklen_t __addr_len);
 
 /* Read N bytes into BUF through socket FD.
    If ADDR is not NULL, fill in *ADDR_LEN bytes of it with tha address of
    the sender, and store the actual size of the address in *ADDR_LEN.
-   Returns the number of bytes read or -1 for errors.  */
-extern ssize_t recvfrom (int __fd, void *__restrict __buf, size_t __n, int __flags,
-			 __SOCKADDR_ARG __addr, socklen_t *__restrict __addr_len)
-     __THROW;
+   Returns the number of bytes read or -1 for errors.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+extern ssize_t recvfrom (int __fd, void *__restrict __buf, size_t __n,
+			 int __flags, __SOCKADDR_ARG __addr,
+			 socklen_t *__restrict __addr_len);
 
 
 /* Send a message described MESSAGE on socket FD.
-   Returns the number of bytes sent, or -1 for errors.  */
-extern ssize_t sendmsg (int __fd, __const struct msghdr *__message, int __flags)
-     __THROW;
+   Returns the number of bytes sent, or -1 for errors.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+extern ssize_t sendmsg (int __fd, __const struct msghdr *__message,
+			int __flags);
 
 /* Receive a message as described by MESSAGE from socket FD.
-   Returns the number of bytes read or -1 for errors.  */
-extern ssize_t recvmsg (int __fd, struct msghdr *__message, int __flags)
-     __THROW;
+   Returns the number of bytes read or -1 for errors.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+extern ssize_t recvmsg (int __fd, struct msghdr *__message, int __flags);
 
 
 /* Put the current value for socket FD's option OPTNAME at protocol level LEVEL
@@ -185,10 +207,21 @@ extern int listen (int __fd, int __n) __THROW;
    When a connection arrives, open a new socket to communicate with it,
    set *ADDR (which is *ADDR_LEN bytes long) to the address of the connecting
    peer and *ADDR_LEN to the address's actual length, and return the
-   new socket's descriptor, or -1 for errors.  */
+   new socket's descriptor, or -1 for errors.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
 extern int accept (int __fd, __SOCKADDR_ARG __addr,
-		   socklen_t *__restrict __addr_len)
-     __THROW;
+		   socklen_t *__restrict __addr_len);
+
+#if defined __UCLIBC_LINUX_SPECIFIC__ && defined __USE_GNU
+/* Similar to 'accept' but takes an additional parameter to specify flags.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+extern int accept4 (int __fd, __SOCKADDR_ARG __addr,
+		    socklen_t *__restrict __addr_len, int __flags);
+#endif
 
 /* Shut down all or part of the connection open on socket FD.
    HOW determines what to shut down:
@@ -199,7 +232,7 @@ extern int accept (int __fd, __SOCKADDR_ARG __addr,
 extern int shutdown (int __fd, int __how) __THROW;
 
 
-#ifdef __USE_XOPEN2K
+#if 0 /*def __USE_XOPEN2K*/
 /* Determine wheter socket is at a out-of-band mark.  */
 extern int sockatmark (int __fd) __THROW;
 #endif

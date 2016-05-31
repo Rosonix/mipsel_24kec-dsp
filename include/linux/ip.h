@@ -16,9 +16,8 @@
  */
 #ifndef _LINUX_IP_H
 #define _LINUX_IP_H
+#include <linux/types.h>
 #include <asm/byteorder.h>
-
-/* SOL_IP socket options */
 
 #define IPTOS_TOS_MASK		0x1E
 #define IPTOS_TOS(tos)		((tos)&IPTOS_TOS_MASK)
@@ -58,6 +57,7 @@
 #define IPOPT_SEC	(2 |IPOPT_CONTROL|IPOPT_COPY)
 #define IPOPT_LSRR	(3 |IPOPT_CONTROL|IPOPT_COPY)
 #define IPOPT_TIMESTAMP	(4 |IPOPT_MEASUREMENT)
+#define IPOPT_CIPSO	(6 |IPOPT_CONTROL|IPOPT_COPY)
 #define IPOPT_RR	(7 |IPOPT_CONTROL)
 #define IPOPT_SID	(8 |IPOPT_CONTROL|IPOPT_COPY)
 #define IPOPT_SSRR	(9 |IPOPT_CONTROL|IPOPT_COPY)
@@ -66,14 +66,6 @@
 #define IPVERSION	4
 #define MAXTTL		255
 #define IPDEFTTL	64
-
-/* struct timestamp, struct route and MAX_ROUTES are removed.
-
-   REASONS: it is clear that nobody used them because:
-   - MAX_ROUTES value was wrong.
-   - "struct route" was wrong.
-   - "struct timestamp" had fatally misaligned bitfields and was completely unusable.
- */
 
 #define IPOPT_OPTVAL 0
 #define IPOPT_OLEN   1
@@ -88,30 +80,7 @@
 #define	IPOPT_TS_TSANDADDR	1		/* timestamps and addresses */
 #define	IPOPT_TS_PRESPEC	3		/* specified modules only */
 
-#ifdef __KERNEL__
-
-struct ip_options {
-  __u32		faddr;				/* Saved first hop address */
-  unsigned char	optlen;
-  unsigned char srr;
-  unsigned char rr;
-  unsigned char ts;
-  unsigned char is_setbyuser:1,			/* Set by setsockopt?			*/
-                is_data:1,			/* Options in __data, rather than skb	*/
-                is_strictroute:1,		/* Strict source route			*/
-                srr_is_hit:1,			/* Packet destination addr was our one	*/
-                is_changed:1,			/* IP checksum more not valid		*/	
-                rr_needaddr:1,			/* Need to record addr of outgoing dev	*/
-                ts_needtime:1,			/* Need to record timestamp		*/
-                ts_needaddr:1;			/* Need to record addr of outgoing dev  */
-  unsigned char router_alert;
-  unsigned char __pad1;
-  unsigned char __pad2;
-  unsigned char __data[0];
-};
-
-#define optlength(opt) (sizeof(struct ip_options) + opt->optlen)
-#endif
+#define IPV4_BEET_PHMAXLEN 8
 
 struct iphdr {
 #if defined(__LITTLE_ENDIAN_BITFIELD)
@@ -124,15 +93,80 @@ struct iphdr {
 #error	"Please fix <asm/byteorder.h>"
 #endif
 	__u8	tos;
-	__u16	tot_len;
-	__u16	id;
-	__u16	frag_off;
+	__be16	tot_len;
+	__be16	id;
+	__be16	frag_off;
 	__u8	ttl;
 	__u8	protocol;
-	__u16	check;
-	__u32	saddr;
-	__u32	daddr;
+	__sum16	check;
+	__be32	saddr;
+	__be32	daddr;
 	/*The options start here. */
 };
 
-#endif	/* _LINUX_IP_H */
+
+struct ip_auth_hdr {
+	__u8  nexthdr;
+	__u8  hdrlen;		/* This one is measured in 32 bit units! */
+	__be16 reserved;
+	__be32 spi;
+	__be32 seq_no;		/* Sequence number */
+	__u8  auth_data[0];	/* Variable len but >=4. Mind the 64 bit alignment! */
+};
+
+struct ip_esp_hdr {
+	__be32 spi;
+	__be32 seq_no;		/* Sequence number */
+	__u8  enc_data[0];	/* Variable len but >=8. Mind the 64 bit alignment! */
+};
+
+struct ip_comp_hdr {
+	__u8 nexthdr;
+	__u8 flags;
+	__be16 cpi;
+};
+
+struct ip_beet_phdr {
+	__u8 nexthdr;
+	__u8 hdrlen;
+	__u8 padlen;
+	__u8 reserved;
+};
+
+/* index values for the variables in ipv4_devconf */
+enum
+{
+	IPV4_DEVCONF_FORWARDING=1,
+	IPV4_DEVCONF_MC_FORWARDING,
+	IPV4_DEVCONF_PROXY_ARP,
+	IPV4_DEVCONF_ACCEPT_REDIRECTS,
+	IPV4_DEVCONF_SECURE_REDIRECTS,
+	IPV4_DEVCONF_SEND_REDIRECTS,
+	IPV4_DEVCONF_SHARED_MEDIA,
+	IPV4_DEVCONF_RP_FILTER,
+	IPV4_DEVCONF_ACCEPT_SOURCE_ROUTE,
+	IPV4_DEVCONF_BOOTP_RELAY,
+	IPV4_DEVCONF_LOG_MARTIANS,
+	IPV4_DEVCONF_TAG,
+	IPV4_DEVCONF_ARPFILTER,
+	IPV4_DEVCONF_MEDIUM_ID,
+	IPV4_DEVCONF_NOXFRM,
+	IPV4_DEVCONF_NOPOLICY,
+	IPV4_DEVCONF_FORCE_IGMP_VERSION,
+	IPV4_DEVCONF_ARP_ANNOUNCE,
+	IPV4_DEVCONF_ARP_IGNORE,
+	IPV4_DEVCONF_PROMOTE_SECONDARIES,
+	IPV4_DEVCONF_ARP_ACCEPT,
+	IPV4_DEVCONF_ARP_NOTIFY,
+	IPV4_DEVCONF_ACCEPT_LOCAL,
+	IPV4_DEVCONF_SRC_VMARK,
+	IPV4_DEVCONF_PROXY_ARP_PVLAN,
+	IPV4_DEVCONF_ROUTE_LOCALNET,
+	IPV4_DEVCONF_IGMPV2_UNSOLICITED_REPORT_INTERVAL,
+	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
+	__IPV4_DEVCONF_MAX
+};
+
+#define IPV4_DEVCONF_MAX (__IPV4_DEVCONF_MAX - 1)
+
+#endif /* _LINUX_IP_H */

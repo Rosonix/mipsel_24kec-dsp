@@ -2,7 +2,7 @@
 #define _LINUX_ELF_H
 
 #include <linux/types.h>
-#include <asm/elf.h>
+#include <linux/elf-em.h>
 
 /* 32-bit ELF base types. */
 typedef __u32	Elf32_Addr;
@@ -29,20 +29,36 @@ typedef __s64	Elf64_Sxword;
 #define PT_NOTE    4
 #define PT_SHLIB   5
 #define PT_PHDR    6
+#define PT_TLS     7               /* Thread local storage segment */
+#define PT_LOOS    0x60000000      /* OS-specific */
+#define PT_HIOS    0x6fffffff      /* OS-specific */
 #define PT_LOPROC  0x70000000
 #define PT_HIPROC  0x7fffffff
-#define PT_MIPS_REGINFO		0x70000000
-#define PT_MIPS_OPTIONS		0x70000001
+#define PT_GNU_EH_FRAME		0x6474e550
 
-/* Flags in the e_flags field of the header */
-#define EF_MIPS_NOREORDER 0x00000001
-#define EF_MIPS_PIC       0x00000002
-#define EF_MIPS_CPIC      0x00000004
-#define EF_MIPS_ABI2      0x00000020
-#define EF_MIPS_OPTIONS_FIRST 0x00000080
-#define EF_MIPS_32BITMODE 0x00000100
-#define EF_MIPS_ABI       0x0000f000
-#define EF_MIPS_ARCH      0xf0000000
+#define PT_GNU_STACK	(PT_LOOS + 0x474e551)
+
+/*
+ * Extended Numbering
+ *
+ * If the real number of program header table entries is larger than
+ * or equal to PN_XNUM(0xffff), it is set to sh_info field of the
+ * section header at index 0, and PN_XNUM is set to e_phnum
+ * field. Otherwise, the section header at index 0 is zero
+ * initialized, if it exists.
+ *
+ * Specifications are available in:
+ *
+ * - Oracle: Linker and Libraries.
+ *   Part No: 817–1984–19, August 2011.
+ *   http://docs.oracle.com/cd/E18752_01/pdf/817-1984.pdf
+ *
+ * - System V ABI AMD64 Architecture Processor Supplement
+ *   Draft Version 0.99.4,
+ *   January 13, 2010.
+ *   http://www.cs.washington.edu/education/courses/cse351/12wi/supp-docs/abi.pdf
+ */
+#define PN_XNUM 0xffff
 
 /* These constants define the different elf file types */
 #define ET_NONE   0
@@ -52,50 +68,6 @@ typedef __s64	Elf64_Sxword;
 #define ET_CORE   4
 #define ET_LOPROC 0xff00
 #define ET_HIPROC 0xffff
-
-/* These constants define the various ELF target machines */
-#define EM_NONE  0
-#define EM_M32   1
-#define EM_SPARC 2
-#define EM_386   3
-#define EM_68K   4
-#define EM_88K   5
-#define EM_486   6   /* Perhaps disused */
-#define EM_860   7
-
-#define EM_MIPS		8	/* MIPS R3000 (officially, big-endian only) */
-
-#define EM_MIPS_RS3_LE 10	/* MIPS R3000 little-endian */
-
-#define EM_PARISC      15	/* HPPA */
-
-#define EM_SPARC32PLUS 18	/* Sun's "v8plus" */
-
-#define EM_PPC	       20	/* PowerPC */
-#define EM_PPC64       21       /* PowerPC64 */
-
-#define EM_SH	       42	/* SuperH */
-
-#define EM_SPARCV9     43	/* SPARC v9 64-bit */
-
-#define EM_IA_64	50	/* HP/Intel IA-64 */
-
-#define EM_X86_64	62	/* AMD x86-64 */
-
-#define EM_S390		22	/* IBM S/390 */
-
-#define EM_CRIS         76      /* Axis Communications 32-bit embedded processor */
-
-/*
- * This is an interim value that we will use until the committee comes
- * up with a final number.
- */
-#define EM_ALPHA	0x9026
-
-/*
- * This is the old interim value for S/390 architecture
- */
-#define EM_S390_OLD     0xA390
 
 /* This is the info that is needed to parse the dynamic section of the file */
 #define DT_NULL		0
@@ -122,27 +94,25 @@ typedef __s64	Elf64_Sxword;
 #define DT_DEBUG	21
 #define DT_TEXTREL	22
 #define DT_JMPREL	23
+#define DT_ENCODING	32
+#define OLD_DT_LOOS	0x60000000
+#define DT_LOOS		0x6000000d
+#define DT_HIOS		0x6ffff000
+#define DT_VALRNGLO	0x6ffffd00
+#define DT_VALRNGHI	0x6ffffdff
+#define DT_ADDRRNGLO	0x6ffffe00
+#define DT_ADDRRNGHI	0x6ffffeff
+#define DT_VERSYM	0x6ffffff0
+#define DT_RELACOUNT	0x6ffffff9
+#define DT_RELCOUNT	0x6ffffffa
+#define DT_FLAGS_1	0x6ffffffb
+#define DT_VERDEF	0x6ffffffc
+#define	DT_VERDEFNUM	0x6ffffffd
+#define DT_VERNEED	0x6ffffffe
+#define	DT_VERNEEDNUM	0x6fffffff
+#define OLD_DT_HIOS     0x6fffffff
 #define DT_LOPROC	0x70000000
 #define DT_HIPROC	0x7fffffff
-#define DT_MIPS_RLD_VERSION	0x70000001
-#define DT_MIPS_TIME_STAMP	0x70000002
-#define DT_MIPS_ICHECKSUM	0x70000003
-#define DT_MIPS_IVERSION	0x70000004
-#define DT_MIPS_FLAGS		0x70000005
-  #define RHF_NONE		  0
-  #define RHF_HARDWAY		  1
-  #define RHF_NOTPOT		  2
-#define DT_MIPS_BASE_ADDRESS	0x70000006
-#define DT_MIPS_CONFLICT	0x70000008
-#define DT_MIPS_LIBLIST		0x70000009
-#define DT_MIPS_LOCAL_GOTNO	0x7000000a
-#define DT_MIPS_CONFLICTNO	0x7000000b
-#define DT_MIPS_LIBLISTNO	0x70000010
-#define DT_MIPS_SYMTABNO	0x70000011
-#define DT_MIPS_UNREFEXTNO	0x70000012
-#define DT_MIPS_GOTSYM		0x70000013
-#define DT_MIPS_HIPAGENO	0x70000014
-#define DT_MIPS_RLD_MAP		0x70000016
 
 /* This info is needed when parsing the symbol table */
 #define STB_LOCAL  0
@@ -154,30 +124,15 @@ typedef __s64	Elf64_Sxword;
 #define STT_FUNC    2
 #define STT_SECTION 3
 #define STT_FILE    4
+#define STT_COMMON  5
+#define STT_TLS     6
 
-#define ELF32_ST_BIND(x) ((x) >> 4)
-#define ELF32_ST_TYPE(x) (((unsigned int) x) & 0xf)
-
-/* Symbolic values for the entries in the auxiliary table
-   put on the initial stack */
-#define AT_NULL   0	/* end of vector */
-#define AT_IGNORE 1	/* entry should be ignored */
-#define AT_EXECFD 2	/* file descriptor of program */
-#define AT_PHDR   3	/* program headers for program */
-#define AT_PHENT  4	/* size of program header entry */
-#define AT_PHNUM  5	/* number of program headers */
-#define AT_PAGESZ 6	/* system page size */
-#define AT_BASE   7	/* base address of interpreter */
-#define AT_FLAGS  8	/* flags */
-#define AT_ENTRY  9	/* entry point of program */
-#define AT_NOTELF 10	/* program is not ELF */
-#define AT_UID    11	/* real uid */
-#define AT_EUID   12	/* effective uid */
-#define AT_GID    13	/* real gid */
-#define AT_EGID   14	/* effective gid */
-#define AT_PLATFORM 15  /* string identifying CPU for optimizations */
-#define AT_HWCAP  16    /* arch dependent hints at CPU capabilities */
-#define AT_CLKTCK 17	/* frequency at which times() increments */
+#define ELF_ST_BIND(x)		((x) >> 4)
+#define ELF_ST_TYPE(x)		(((unsigned int) x) & 0xf)
+#define ELF32_ST_BIND(x)	ELF_ST_BIND(x)
+#define ELF32_ST_TYPE(x)	ELF_ST_TYPE(x)
+#define ELF64_ST_BIND(x)	ELF_ST_BIND(x)
+#define ELF64_ST_TYPE(x)	ELF_ST_TYPE(x)
 
 typedef struct dynamic{
   Elf32_Sword d_tag;
@@ -199,181 +154,8 @@ typedef struct {
 #define ELF32_R_SYM(x) ((x) >> 8)
 #define ELF32_R_TYPE(x) ((x) & 0xff)
 
-#define R_386_NONE	0
-#define R_386_32	1
-#define R_386_PC32	2
-#define R_386_GOT32	3
-#define R_386_PLT32	4
-#define R_386_COPY	5
-#define R_386_GLOB_DAT	6
-#define R_386_JMP_SLOT	7
-#define R_386_RELATIVE	8
-#define R_386_GOTOFF	9
-#define R_386_GOTPC	10
-#define R_386_NUM	11
-
-#define R_MIPS_NONE		0
-#define R_MIPS_16		1
-#define R_MIPS_32		2
-#define R_MIPS_REL32		3
-#define R_MIPS_26		4
-#define R_MIPS_HI16		5
-#define R_MIPS_LO16		6
-#define R_MIPS_GPREL16		7
-#define R_MIPS_LITERAL		8
-#define R_MIPS_GOT16		9
-#define R_MIPS_PC16		10
-#define R_MIPS_CALL16		11
-#define R_MIPS_GPREL32		12
-/* The remaining relocs are defined on Irix, although they are not
-   in the MIPS ELF ABI.  */
-#define R_MIPS_UNUSED1		13
-#define R_MIPS_UNUSED2		14
-#define R_MIPS_UNUSED3		15
-#define R_MIPS_SHIFT5		16
-#define R_MIPS_SHIFT6		17
-#define R_MIPS_64		18
-#define R_MIPS_GOT_DISP		19
-#define R_MIPS_GOT_PAGE		20
-#define R_MIPS_GOT_OFST		21
-/*
- * The following two relocation types are specified in the MIPS ABI
- * conformance guide version 1.2 but not yet in the psABI.
- */
-#define R_MIPS_GOTHI16		22
-#define R_MIPS_GOTLO16		23
-#define R_MIPS_SUB		24
-#define R_MIPS_INSERT_A		25
-#define R_MIPS_INSERT_B		26
-#define R_MIPS_DELETE		27
-#define R_MIPS_HIGHER		28
-#define R_MIPS_HIGHEST		29
-/*
- * The following two relocation types are specified in the MIPS ABI
- * conformance guide version 1.2 but not yet in the psABI.
- */
-#define R_MIPS_CALLHI16		30
-#define R_MIPS_CALLLO16		31
-/*
- * This range is reserved for vendor specific relocations.
- */
-#define R_MIPS_LOVENDOR		100
-#define R_MIPS_HIVENDOR		127
-
-
-/*
- * Sparc ELF relocation types
- */
-#define	R_SPARC_NONE		0
-#define	R_SPARC_8		1
-#define	R_SPARC_16		2
-#define	R_SPARC_32		3
-#define	R_SPARC_DISP8		4
-#define	R_SPARC_DISP16		5
-#define	R_SPARC_DISP32		6
-#define	R_SPARC_WDISP30		7
-#define	R_SPARC_WDISP22		8
-#define	R_SPARC_HI22		9
-#define	R_SPARC_22		10
-#define	R_SPARC_13		11
-#define	R_SPARC_LO10		12
-#define	R_SPARC_GOT10		13
-#define	R_SPARC_GOT13		14
-#define	R_SPARC_GOT22		15
-#define	R_SPARC_PC10		16
-#define	R_SPARC_PC22		17
-#define	R_SPARC_WPLT30		18
-#define	R_SPARC_COPY		19
-#define	R_SPARC_GLOB_DAT	20
-#define	R_SPARC_JMP_SLOT	21
-#define	R_SPARC_RELATIVE	22
-#define	R_SPARC_UA32		23
-#define R_SPARC_PLT32		24
-#define R_SPARC_HIPLT22		25
-#define R_SPARC_LOPLT10		26
-#define R_SPARC_PCPLT32		27
-#define R_SPARC_PCPLT22		28
-#define R_SPARC_PCPLT10		29
-#define R_SPARC_10		30
-#define R_SPARC_11		31
-#define R_SPARC_WDISP16		40
-#define R_SPARC_WDISP19		41
-#define R_SPARC_7		43
-#define R_SPARC_5		44
-#define R_SPARC_6		45
-
-/* Bits present in AT_HWCAP, primarily for Sparc32.  */
-
-#define HWCAP_SPARC_FLUSH       1    /* CPU supports flush instruction. */
-#define HWCAP_SPARC_STBAR       2
-#define HWCAP_SPARC_SWAP        4
-#define HWCAP_SPARC_MULDIV      8
-#define HWCAP_SPARC_V9		16
-#define HWCAP_SPARC_ULTRA3	32
-
-/*
- * 68k ELF relocation types
- */
-#define R_68K_NONE	0
-#define R_68K_32	1
-#define R_68K_16	2
-#define R_68K_8		3
-#define R_68K_PC32	4
-#define R_68K_PC16	5
-#define R_68K_PC8	6
-#define R_68K_GOT32	7
-#define R_68K_GOT16	8
-#define R_68K_GOT8	9
-#define R_68K_GOT32O	10
-#define R_68K_GOT16O	11
-#define R_68K_GOT8O	12
-#define R_68K_PLT32	13
-#define R_68K_PLT16	14
-#define R_68K_PLT8	15
-#define R_68K_PLT32O	16
-#define R_68K_PLT16O	17
-#define R_68K_PLT8O	18
-#define R_68K_COPY	19
-#define R_68K_GLOB_DAT	20
-#define R_68K_JMP_SLOT	21
-#define R_68K_RELATIVE	22
-
-/*
- * Alpha ELF relocation types
- */
-#define R_ALPHA_NONE            0       /* No reloc */
-#define R_ALPHA_REFLONG         1       /* Direct 32 bit */
-#define R_ALPHA_REFQUAD         2       /* Direct 64 bit */
-#define R_ALPHA_GPREL32         3       /* GP relative 32 bit */
-#define R_ALPHA_LITERAL         4       /* GP relative 16 bit w/optimization */
-#define R_ALPHA_LITUSE          5       /* Optimization hint for LITERAL */
-#define R_ALPHA_GPDISP          6       /* Add displacement to GP */
-#define R_ALPHA_BRADDR          7       /* PC+4 relative 23 bit shifted */
-#define R_ALPHA_HINT            8       /* PC+4 relative 16 bit shifted */
-#define R_ALPHA_SREL16          9       /* PC relative 16 bit */
-#define R_ALPHA_SREL32          10      /* PC relative 32 bit */
-#define R_ALPHA_SREL64          11      /* PC relative 64 bit */
-#define R_ALPHA_OP_PUSH         12      /* OP stack push */
-#define R_ALPHA_OP_STORE        13      /* OP stack pop and store */
-#define R_ALPHA_OP_PSUB         14      /* OP stack subtract */
-#define R_ALPHA_OP_PRSHIFT      15      /* OP stack right shift */
-#define R_ALPHA_GPVALUE         16
-#define R_ALPHA_GPRELHIGH       17
-#define R_ALPHA_GPRELLOW        18
-#define R_ALPHA_IMMED_GP_16     19
-#define R_ALPHA_IMMED_GP_HI32   20
-#define R_ALPHA_IMMED_SCN_HI32  21
-#define R_ALPHA_IMMED_BR_HI32   22
-#define R_ALPHA_IMMED_LO32      23
-#define R_ALPHA_COPY            24      /* Copy symbol at runtime */
-#define R_ALPHA_GLOB_DAT        25      /* Create GOT entry */
-#define R_ALPHA_JMP_SLOT        26      /* Create PLT entry */
-#define R_ALPHA_RELATIVE        27      /* Adjust by program base */
-
-/* Legal values for e_flags field of Elf64_Ehdr.  */
-
-#define EF_ALPHA_32BIT		1	/* All addresses are below 2GB */
-
+#define ELF64_R_SYM(i)			((i) >> 32)
+#define ELF64_R_TYPE(i)			((i) & 0xffffffff)
 
 typedef struct elf32_rel {
   Elf32_Addr	r_offset;
@@ -436,7 +218,7 @@ typedef struct elf32_hdr{
 } Elf32_Ehdr;
 
 typedef struct elf64_hdr {
-  unsigned char	e_ident[16];		/* ELF "magic number" */
+  unsigned char	e_ident[EI_NIDENT];	/* ELF "magic number" */
   Elf64_Half e_type;
   Elf64_Half e_machine;
   Elf64_Word e_version;
@@ -498,17 +280,12 @@ typedef struct elf64_phdr {
 #define SHT_HIPROC	0x7fffffff
 #define SHT_LOUSER	0x80000000
 #define SHT_HIUSER	0xffffffff
-#define SHT_MIPS_LIST		0x70000000
-#define SHT_MIPS_CONFLICT	0x70000002
-#define SHT_MIPS_GPTAB		0x70000003
-#define SHT_MIPS_UCODE		0x70000004
 
 /* sh_flags */
 #define SHF_WRITE	0x1
 #define SHF_ALLOC	0x2
 #define SHF_EXECINSTR	0x4
 #define SHF_MASKPROC	0xf0000000
-#define SHF_MIPS_GPREL	0x10000000
 
 /* special section indexes */
 #define SHN_UNDEF	0
@@ -518,9 +295,8 @@ typedef struct elf64_phdr {
 #define SHN_ABS		0xfff1
 #define SHN_COMMON	0xfff2
 #define SHN_HIRESERVE	0xffff
-#define SHN_MIPS_ACCOMON	0xff00
  
-typedef struct {
+typedef struct elf32_shdr {
   Elf32_Word	sh_name;
   Elf32_Word	sh_type;
   Elf32_Word	sh_flags;
@@ -553,7 +329,8 @@ typedef struct elf64_shdr {
 #define	EI_CLASS	4
 #define	EI_DATA		5
 #define	EI_VERSION	6
-#define	EI_PAD		7
+#define	EI_OSABI	7
+#define	EI_PAD		8
 
 #define	ELFMAG0		0x7f		/* EI_MAG */
 #define	ELFMAG1		'E'
@@ -575,12 +352,55 @@ typedef struct elf64_shdr {
 #define EV_CURRENT	1
 #define EV_NUM		2
 
-/* Notes used in ET_CORE */
+#define ELFOSABI_NONE	0
+#define ELFOSABI_LINUX	3
+
+#ifndef ELF_OSABI
+#define ELF_OSABI ELFOSABI_NONE
+#endif
+
+/*
+ * Notes used in ET_CORE. Architectures export some of the arch register sets
+ * using the corresponding note types via the PTRACE_GETREGSET and
+ * PTRACE_SETREGSET requests.
+ */
 #define NT_PRSTATUS	1
 #define NT_PRFPREG	2
 #define NT_PRPSINFO	3
 #define NT_TASKSTRUCT	4
-#define NT_PRFPXREG	20
+#define NT_AUXV		6
+/*
+ * Note to userspace developers: size of NT_SIGINFO note may increase
+ * in the future to accomodate more fields, don't assume it is fixed!
+ */
+#define NT_SIGINFO      0x53494749
+#define NT_FILE         0x46494c45
+#define NT_PRXFPREG     0x46e62b7f      /* copied from gdb5.1/include/elf/common.h */
+#define NT_PPC_VMX	0x100		/* PowerPC Altivec/VMX registers */
+#define NT_PPC_SPE	0x101		/* PowerPC SPE/EVR registers */
+#define NT_PPC_VSX	0x102		/* PowerPC VSX registers */
+#define NT_386_TLS	0x200		/* i386 TLS slots (struct user_desc) */
+#define NT_386_IOPERM	0x201		/* x86 io permission bitmap (1=deny) */
+#define NT_X86_XSTATE	0x202		/* x86 extended state using xsave */
+#define NT_S390_HIGH_GPRS	0x300	/* s390 upper register halves */
+#define NT_S390_TIMER	0x301		/* s390 timer register */
+#define NT_S390_TODCMP	0x302		/* s390 TOD clock comparator register */
+#define NT_S390_TODPREG	0x303		/* s390 TOD programmable register */
+#define NT_S390_CTRS	0x304		/* s390 control registers */
+#define NT_S390_PREFIX	0x305		/* s390 prefix register */
+#define NT_S390_LAST_BREAK	0x306	/* s390 breaking event address */
+#define NT_S390_SYSTEM_CALL	0x307	/* s390 system call restart data */
+#define NT_S390_TDB	0x308		/* s390 transaction diagnostic block */
+#define NT_S390_VXRS_LOW	0x309	/* s390 vector registers 0-15 upper half */
+#define NT_S390_VXRS_HIGH	0x30a	/* s390 vector registers 16-31 */
+#define NT_ARM_VFP	0x400		/* ARM VFP/NEON registers */
+#define NT_ARM_TLS	0x401		/* ARM TLS register */
+#define NT_ARM_HW_BREAK	0x402		/* ARM hardware breakpoint registers */
+#define NT_ARM_HW_WATCH	0x403		/* ARM hardware watchpoint registers */
+#define NT_METAG_CBUF	0x500		/* Metag catch buffer registers */
+#define NT_METAG_RPIPE	0x501		/* Metag read pipeline state */
+#define NT_METAG_TLS	0x502		/* Metag TLS pointer */
+
 
 /* Note header in a PT_NOTE section */
 typedef struct elf32_note {
@@ -595,22 +415,5 @@ typedef struct elf64_note {
   Elf64_Word n_descsz;	/* Content size */
   Elf64_Word n_type;	/* Content type */
 } Elf64_Nhdr;
-
-#if ELF_CLASS == ELFCLASS32
-
-extern Elf32_Dyn _DYNAMIC [];
-#define elfhdr		elf32_hdr
-#define elf_phdr	elf32_phdr
-#define elf_note	elf32_note
-
-#else
-
-extern Elf64_Dyn _DYNAMIC [];
-#define elfhdr		elf64_hdr
-#define elf_phdr	elf64_phdr
-#define elf_note	elf64_note
-
-#endif
-
 
 #endif /* _LINUX_ELF_H */

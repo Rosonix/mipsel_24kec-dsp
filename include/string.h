@@ -111,8 +111,7 @@ extern size_t strxfrm (char *__restrict __dest,
      __THROW __nonnull ((2));
 __END_NAMESPACE_STD
 
-#ifdef __UCLIBC_HAS_XLOCALE__
-#ifdef __USE_GNU
+#if defined __USE_GNU && defined __UCLIBC_HAS_XLOCALE__
 /* The following functions are equivalent to the both above but they
    take the locale they use for the collation as an extra argument.
    This is not standardsized but something like will come.  */
@@ -121,17 +120,10 @@ __END_NAMESPACE_STD
 /* Compare the collated forms of S1 and S2 using rules from L.  */
 extern int strcoll_l (__const char *__s1, __const char *__s2, __locale_t __l)
      __THROW __attribute_pure__ __nonnull ((1, 2, 3));
-extern int __strcoll_l (__const char *__s1, __const char *__s2, __locale_t __l)
-     __THROW __attribute_pure__ __nonnull ((1, 2, 3));
-
 /* Put a transformation of SRC into no more than N bytes of DEST.  */
 extern size_t strxfrm_l (char *__dest, __const char *__src, size_t __n,
 			 __locale_t __l) __THROW __nonnull ((2, 4));
-extern size_t __strxfrm_l (char *__dest, __const char *__src, size_t __n,
-			 __locale_t __l) __THROW __nonnull ((2, 4));
-
 #endif
-#endif /* __UCLIBC_HAS_XLOCALE__ */
 
 #if defined __USE_SVID || defined __USE_BSD || defined __USE_XOPEN_EXTENDED
 /* Duplicate S, returning an identical malloc'd string.  */
@@ -210,10 +202,12 @@ __END_NAMESPACE_STD
 
 /* Divide S into tokens separated by characters in DELIM.  Information
    passed between calls are stored in SAVE_PTR.  */
+#if 0 /* uClibc: disabled */
 extern char *__strtok_r (char *__restrict __s,
 			 __const char *__restrict __delim,
 			 char **__restrict __save_ptr)
      __THROW __nonnull ((2, 3));
+#endif
 #if defined __USE_POSIX || defined __USE_MISC
 extern char *strtok_r (char *__restrict __s, __const char *__restrict __delim,
 		       char **__restrict __save_ptr)
@@ -236,9 +230,11 @@ extern void *memmem (__const void *__haystack, size_t __haystacklen,
 
 /* Copy N bytes of SRC to DEST, return pointer to bytes after the
    last written byte.  */
+#if 0 /* uClibc: disabled */
 extern void *__mempcpy (void *__restrict __dest,
 			__const void *__restrict __src, size_t __n)
      __THROW __nonnull ((1, 2));
+#endif
 extern void *mempcpy (void *__restrict __dest,
 		      __const void *__restrict __src, size_t __n)
      __THROW __nonnull ((1, 2));
@@ -263,12 +259,6 @@ __BEGIN_NAMESPACE_STD
 /* Return a string describing the meaning of the `errno' code in ERRNUM.  */
 extern char *strerror (int __errnum) __THROW;
 __END_NAMESPACE_STD
-
-extern char *__glibc_strerror_r (int __errnum, char *__buf, size_t __buflen)
-     __THROW __nonnull ((2));
-extern int __xpg_strerror_r (int __errnum, char *__buf, size_t __buflen)
-     __THROW __nonnull ((2));
-
 #if defined __USE_XOPEN2K || defined __USE_MISC
 /* Reentrant version of `strerror'.
    There are 2 flavors of `strerror_r', GNU which returns the string
@@ -280,6 +270,8 @@ extern int __xpg_strerror_r (int __errnum, char *__buf, size_t __buflen)
 # if defined __USE_XOPEN2K && !defined __USE_GNU
 /* Fill BUF with a string describing the meaning of the `errno' code in
    ERRNUM.  */
+extern int __xpg_strerror_r (int __errnum, char *__buf, size_t __buflen)
+     __THROW __nonnull ((2));
 #  ifdef __REDIRECT_NTH
 extern int __REDIRECT_NTH (strerror_r,
 			   (int __errnum, char *__buf, size_t __buflen),
@@ -290,6 +282,8 @@ extern int __REDIRECT_NTH (strerror_r,
 # else
 /* If a temporary buffer is required, at most BUFLEN bytes of BUF will be
    used.  */
+extern char *__glibc_strerror_r (int __errnum, char *__buf, size_t __buflen)
+     __THROW __nonnull ((2));
 #  ifdef __REDIRECT_NTH
 extern char * __REDIRECT_NTH (strerror_r,
 			   (int __errnum, char *__buf, size_t __buflen),
@@ -302,9 +296,12 @@ extern char * __REDIRECT_NTH (strerror_r,
 
 /* We define this function always since `bzero' is sometimes needed when
    the namespace rules does not allow this.  */
+#if 0 /* uClibc: disabled */
 extern void __bzero (void *__s, size_t __n) __THROW __nonnull ((1));
+#endif
 
 #ifdef __USE_BSD
+# ifdef __UCLIBC_SUSV3_LEGACY__
 /* Copy N bytes of SRC to DEST (like memmove, but args reversed).  */
 extern void bcopy (__const void *__src, void *__dest, size_t __n)
      __THROW __nonnull ((1, 2));
@@ -323,6 +320,41 @@ extern char *index (__const char *__s, int __c)
 /* Find the last occurrence of C in S (same as strrchr).  */
 extern char *rindex (__const char *__s, int __c)
      __THROW __attribute_pure__ __nonnull ((1));
+# elif defined(__UCLIBC_SUSV3_LEGACY_MACROS__) && !defined(_STRINGS_H)
+/* bcopy/bzero/bcmp/index/rindex are marked LEGACY in SuSv3.
+ * They are replaced as proposed by SuSv3. Don't sync this part
+ * with glibc and keep it in sync with strings.h.  */
+
+/* Copy N bytes of SRC to DEST (like memmove, but args reversed).  */
+static __inline__ void bcopy (__const void *__src, void *__dest, size_t __n)
+{
+	memmove(__dest, __src, __n);
+}
+
+/* Set N bytes of S to 0.  */
+static __inline__ void bzero (void *__s, size_t __n)
+{
+	memset(__s, 0, __n);
+}
+
+/* Compare N bytes of S1 and S2 (same as memcmp).  */
+static __inline__ int bcmp (__const void *__s1, __const void *__s2, size_t __n)
+{
+	return memcmp(__s1, __s2, __n);
+}
+
+/* Find the first occurrence of C in S (same as strchr).  */
+static __inline__ char *index (__const char *__s, int __c)
+{
+	return strchr(__s, __c);
+}
+
+/* Find the last occurrence of C in S (same as strrchr).  */
+static __inline__ char *rindex (__const char *__s, int __c)
+{
+	return strrchr(__s, __c);
+}
+# endif
 
 /* Return the position of the first bit set in I, or 0 if none are set.
    The least-significant bit is position 1, the most-significant 32.  */
@@ -330,7 +362,7 @@ extern int ffs (int __i) __THROW __attribute__ ((__const__));
 
 /* The following two functions are non-standard but necessary for non-32 bit
    platforms.  */
-# ifdef	__USE_GNU
+#ifdef __USE_GNU
 extern int ffsl (long int __l) __THROW __attribute__ ((__const__));
 #  ifdef __GNUC__
 __extension__ extern int ffsll (long long int __ll)
@@ -347,25 +379,17 @@ extern int strncasecmp (__const char *__s1, __const char *__s2, size_t __n)
      __THROW __attribute_pure__ __nonnull ((1, 2));
 #endif /* Use BSD.  */
 
-#ifdef __UCLIBC_HAS_XLOCALE__
-#ifdef	__USE_GNU
+#if defined __USE_GNU && defined __UCLIBC_HAS_XLOCALE__
 /* Again versions of a few functions which use the given locale instead
    of the global one.  */
 extern int strcasecmp_l (__const char *__s1, __const char *__s2,
-			 __locale_t __loc)
-     __THROW __attribute_pure__ __nonnull ((1, 2, 3));
-extern int __strcasecmp_l (__const char *__s1, __const char *__s2,
 			 __locale_t __loc)
      __THROW __attribute_pure__ __nonnull ((1, 2, 3));
 
 extern int strncasecmp_l (__const char *__s1, __const char *__s2,
 			  size_t __n, __locale_t __loc)
      __THROW __attribute_pure__ __nonnull ((1, 2, 4));
-extern int __strncasecmp_l (__const char *__s1, __const char *__s2,
-			  size_t __n, __locale_t __loc)
-     __THROW __attribute_pure__ __nonnull ((1, 2, 4));
 #endif
-#endif /* __UCLIBC_HAS_XLOCALE__ */
 
 #ifdef	__USE_BSD
 /* Return the next DELIM-delimited token from *STRINGP,
@@ -384,27 +408,31 @@ extern int strverscmp (__const char *__s1, __const char *__s2)
 extern char *strsignal (int __sig) __THROW;
 
 /* Copy SRC to DEST, returning the address of the terminating '\0' in DEST.  */
+# if 0 /* uClibc: disabled */
 extern char *__stpcpy (char *__restrict __dest, __const char *__restrict __src)
      __THROW __nonnull ((1, 2));
+# endif
 extern char *stpcpy (char *__restrict __dest, __const char *__restrict __src)
      __THROW __nonnull ((1, 2));
 
 /* Copy no more than N characters of SRC to DEST, returning the address of
    the last character written into DEST.  */
+# if 0 /* uClibc: disabled */
 extern char *__stpncpy (char *__restrict __dest,
 			__const char *__restrict __src, size_t __n)
      __THROW __nonnull ((1, 2));
+# endif
 extern char *stpncpy (char *__restrict __dest,
 		      __const char *__restrict __src, size_t __n)
      __THROW __nonnull ((1, 2));
 
-#if 0							/* uClibc does not support strfry or memfrob. */
+# if 0			/* uClibc does not support strfry or memfrob. */
 /* Sautee STRING briskly.  */
 extern char *strfry (char *__string) __THROW __nonnull ((1));
 
 /* Frobnicate N bytes of S.  */
 extern void *memfrob (void *__s, size_t __n) __THROW __nonnull ((1));
-#endif
+# endif
 
 # ifndef basename
 /* Return the file name within directory of FILENAME.  We don't
@@ -413,7 +441,7 @@ extern void *memfrob (void *__s, size_t __n) __THROW __nonnull ((1));
    available.  */
 extern char *basename (__const char *__filename) __THROW __nonnull ((1));
 # endif
-#endif
+#endif /* __USE_GNU */
 
 
 #ifdef	__USE_BSD
@@ -426,4 +454,6 @@ extern size_t strlcpy(char *__restrict dst, const char *__restrict src,
 
 __END_DECLS
 
-#endif /* string.h  */
+
+
+#endif /* string.h */

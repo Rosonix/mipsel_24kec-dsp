@@ -50,40 +50,23 @@
  */
 
 #ifndef _RESOLV_H_
-#define	_RESOLV_H_
 
-#include <sys/param.h>
-#if (!defined(BSD)) || (BSD < 199306)
-# include <sys/bitypes.h>
-#else
-# include <sys/types.h>
-#endif
-#include <sys/cdefs.h>
-#include <stdio.h>
-
+/* These headers are needed for types used in the `struct res_state'
+   declaration.  */
+#include <sys/types.h>
 #include <netinet/in.h>
-#include <arpa/nameser.h>
 
-/*
- * Revision information.  This is the release date in YYYYMMDD format.
- * It can change every day so the right thing to do with it is use it
- * in preprocessor commands such as "#if (__RES > 19931104)".  Do not
- * compare for equality; rather, use it to determine whether your resolver
- * is new enough to contain a certain feature.
- */
+#ifndef __need_res_state
+# define _RESOLV_H_
 
-/* #define	__RES	19991006 we don't have a new resolver yet */
-#define	__RES	19960801
-
-/*
- * Resolver configuration file.
- * Normally not present, but may contain the address of the
- * inital name server(s) to query and the domain search list.
- */
-
-#ifndef _PATH_RESCONF
-#define _PATH_RESCONF        "/etc/resolv.conf"
+# include <sys/param.h>
+# include <sys/cdefs.h>
+# include <stdio.h>
+# include <arpa/nameser.h>
 #endif
+
+#ifndef __res_state_defined
+# define __res_state_defined
 
 typedef enum { res_goahead, res_nextns, res_modified, res_done, res_error }
 	res_sendhookact;
@@ -102,66 +85,134 @@ typedef res_sendhookact (*res_send_rhook) (const struct sockaddr_in *ns,
 					   int anssiz,
 					   int *resplen);
 
+/*
+ * Global defines and variables for resolver stub.
+ */
+# define MAXNS			3	/* max # name servers we'll track */
+# define MAXDFLSRCH		3	/* # default domain levels to try */
+# define MAXDNSRCH		6	/* max # domains in search path */
+# define LOCALDOMAINPARTS	2	/* min levels in name that is "local" */
+
+# define RES_TIMEOUT		5	/* min. seconds between retries */
+# define MAXRESOLVSORT		10	/* number of net to sort on */
+# define RES_MAXNDOTS		15	/* should reflect bit field size */
+# define RES_MAXRETRANS		30	/* only for resolv.conf/RES_OPTIONS */
+# define RES_MAXRETRY		5	/* only for resolv.conf/RES_OPTIONS */
+# define RES_DFLRETRY		3	/* Default #/tries. */
+/* (glibc uses RES_DFLRETRY of 2 but also does _res.retry = 4 sometimes (!) */
+# define RES_MAXTIME		65535	/* Infinity, in milliseconds. */
+
+/* _res (an instance of this structure) uses 0.5kb in bss
+ * in "ordinary" libc's (glibc, xBSD). We want to be less wasteful.
+ * We (1) shuffle and shrink some integer fields,
+ * and (2) can switch off stuff we don't support.
+ * Everything inside __UCLIBC_HAS_COMPAT_RES_STATE__
+ * is not actually used by uclibc and can be configured off.
+ * However, this will prevent some programs from building.
+ * Really obscure stuff with no observed users in the wild is under
+ * __UCLIBC_HAS_EXTRA_COMPAT_RES_STATE__.
+ * I guess it's safe to set that to N.
+ */
+struct __res_state {
+	/*int retrans, retry; - moved, was here */
+	u_int32_t options;		/* (was: ulong) option flags - see below. */
+	struct sockaddr_in nsaddr_list[MAXNS]; /* address of name server */
+#define nsaddr nsaddr_list[0]		/* for backward compatibility */
+	char	*dnsrch[MAXDNSRCH + 1];	/* components of domain to search */
+	/*char defdname[256]; - moved, was here */
+	u_int8_t nscount;		/* (was: int) number of name servers */
+	u_int8_t ndots;			/* (was: unsigned:4) threshold for initial abs. query */
+	u_int8_t retrans;		/* (was: int) retransmission time interval */
+	u_int8_t retry;			/* (was: int) number of times to retransmit */
+#ifdef __UCLIBC_HAS_COMPAT_RES_STATE__
+	/* googling for "_res.defdname" says it's still sometimes used.
+	 * Pity. It's huge, I want to move it to EXTRA_COMPAT... */
+	char	defdname[256];		/* default domain (deprecated) */
+	u_int8_t nsort;			/* (was: unsigned:4) number of elements in sort_list[] */
+	u_int16_t pfcode;		/* (was: ulong) RES_PRF_ flags. Used by dig. */
+	unsigned short id;		/* current message id */
+	int	res_h_errno;		/* last one set for this context */
+	struct {
+		struct in_addr	addr;
+		u_int32_t	mask;
+	} sort_list[MAXRESOLVSORT];
+#endif
+
+	/* I assume that the intention is to store all
+	 * DNS servers' addresses here, and duplicate in nsaddr_list[]
+	 * those which have IPv4 address. In the case of IPv4 address
+	 * _u._ext.nsaddrs[x] will point to some nsaddr_list[y],
+	 * otherwise it will point into malloc'ed sockaddr_in6.
+	 * nscount is the number of IPv4 addresses and _u._ext.nscount
+	 * is the number of addresses of all kinds.
+	 *
+	 * If this differs from established usage and you need
+	 * to change this, please describe how it is supposed to work.
+	 */
+	union {
+		struct {
+#ifdef __UCLIBC_HAS_IPV6__
+			struct sockaddr_in6	*nsaddrs[MAXNS];
+#endif
+			u_int8_t		nscount; /* (was: u_int16_t) */
+#ifdef __UCLIBC_HAS_COMPAT_RES_STATE__
+			/* rather obscure, and differs in BSD and glibc */
+			u_int16_t		nstimes[MAXNS];
+			int			nssocks[MAXNS];
+			u_int16_t		nscount6;
+			u_int16_t		nsinit;
+			/* glibc also has: */
+			/*u_int16_t		nsmap[MAXNS];*/
+			/*unsigned long long	initstamp;*/
+#endif
+		} _ext;
+	} _u;
+
+#ifdef __UCLIBC_HAS_EXTRA_COMPAT_RES_STATE__
+	/* Truly obscure stuff.
+	 * Googling for "_res.XXX" for these members
+	 * turned up basically empty */
+	res_send_qhook qhook;		/* query hook */
+	res_send_rhook rhook;		/* response hook */
+	int	_vcsock;		/* PRIVATE: for res_send VC i/o */
+	unsigned _flags;		/* PRIVATE: see below */
+#endif
+};
+
+typedef struct __res_state *res_state;
+# undef __need_res_state
+#endif
+
+#ifdef _RESOLV_H_
+/*
+ * Revision information.  This is the release date in YYYYMMDD format.
+ * It can change every day so the right thing to do with it is use it
+ * in preprocessor commands such as "#if (__RES > 19931104)".  Do not
+ * compare for equality; rather, use it to determine whether your resolver
+ * is new enough to contain a certain feature.
+ */
+
+#if 0
+#define	__RES	19991006
+#else
+#define	__RES	19960801
+#endif
+
+/*
+ * Resolver configuration file.
+ * Normally not present, but may contain the address of the
+ * inital name server(s) to query and the domain search list.
+ */
+
+#ifndef _PATH_RESCONF
+#define _PATH_RESCONF        "/etc/resolv.conf"
+#endif
+
 struct res_sym {
 	int	number;		/* Identifying number, like T_MX */
 	char *	name;		/* Its symbolic name, like "MX" */
 	char *	humanname;	/* Its fun name, like "mail exchanger" */
 };
-
-/*
- * Global defines and variables for resolver stub.
- */
-#define	MAXNS			3	/* max # name servers we'll track */
-#define	MAXDFLSRCH		3	/* # default domain levels to try */
-#define	MAXDNSRCH		6	/* max # domains in search path */
-#define	LOCALDOMAINPARTS	2	/* min levels in name that is "local" */
-
-#define	RES_TIMEOUT		5	/* min. seconds between retries */
-#define	MAXRESOLVSORT		10	/* number of net to sort on */
-#define	RES_MAXNDOTS		15	/* should reflect bit field size */
-#define	RES_MAXRETRANS		30	/* only for resolv.conf/RES_OPTIONS */
-#define	RES_MAXRETRY		5	/* only for resolv.conf/RES_OPTIONS */
-#define	RES_DFLRETRY		2	/* Default #/tries. */
-#define	RES_MAXTIME		65535	/* Infinity, in milliseconds. */
-
-struct __res_state {
-	int	retrans;	 	/* retransmition time interval */
-	int	retry;			/* number of times to retransmit */
-	u_long	options;		/* option flags - see below. */
-	int	nscount;		/* number of name servers */
-	struct sockaddr_in
-		nsaddr_list[MAXNS];	/* address of name server */
-#define	nsaddr	nsaddr_list[0]		/* for backward compatibility */
-	u_short	id;			/* current message id */
-	char	*dnsrch[MAXDNSRCH+1];	/* components of domain to search */
-	char	defdname[256];		/* default domain (deprecated) */
-	u_long	pfcode;			/* RES_PRF_ flags - see below. */
-	unsigned ndots:4;		/* threshold for initial abs. query */
-	unsigned nsort:4;		/* number of elements in sort_list[] */
-	char	unused[3];
-	struct {
-		struct in_addr	addr;
-		u_int32_t	mask;
-	} sort_list[MAXRESOLVSORT];
-	res_send_qhook qhook;		/* query hook */
-	res_send_rhook rhook;		/* response hook */
-	int	res_h_errno;		/* last one set for this context */
-	int	_vcsock;		/* PRIVATE: for res_send VC i/o */
-	u_int	_flags;			/* PRIVATE: see below */
-	union {
-		char	pad[52];	/* On an i386 this means 512b total. */
-		struct {
-			u_int16_t		nscount;
-			u_int16_t		nstimes[MAXNS];	/* ms. */
-			int			nssocks[MAXNS];
-			u_int16_t		nscount6;
-			u_int16_t		nsinit;
-			struct sockaddr_in6	*nsaddrs[MAXNS];
-		} _ext;
-	} _u;
-};
-
-typedef struct __res_state *res_state;
 
 /*
  * Resolver flags (used to be discrete per-module statics ints).
@@ -174,6 +225,7 @@ typedef struct __res_state *res_state;
 
 /*
  * Resolver options (keep these in synch with res_debug.c, please)
+ * (which of these do we really implement??)
  */
 #define RES_INIT	0x00000001	/* address initialized */
 #define RES_DEBUG	0x00000002	/* print debug messages */
@@ -193,8 +245,16 @@ typedef struct __res_state *res_state;
 #define	RES_NOCHECKNAME	0x00008000	/* do not check names for sanity. */
 #define	RES_KEEPTSIG	0x00010000	/* do not strip TSIG records */
 #define	RES_BLAST	0x00020000	/* blast all recursive servers */
+#if 0
+#define RES_USEBSTRING	0x00040000	/* IPv6 reverse lookup with byte
+					   strings */
+#define RES_NOIP6DOTINT	0x00080000	/* Do not use .ip6.int in IPv6
+					   reverse lookup */
 
-#define RES_DEFAULT	(RES_RECURSE | RES_DEFNAMES | RES_DNSRCH)
+#define RES_DEFAULT	(RES_RECURSE|RES_DEFNAMES|RES_DNSRCH|RES_NOIP6DOTINT)
+#else
+#define RES_DEFAULT	(RES_RECURSE|RES_DEFNAMES|RES_DNSRCH)
+#endif
 
 /*
  * Resolver "pfcode" values.  Used by dig.
@@ -216,65 +276,67 @@ typedef struct __res_state *res_state;
 #define RES_PRF_INIT	0x00004000
 /*			0x00008000	*/
 
-/* Internal (static) resolver context. */
-extern struct __res_state _res;
+/* Things involving an internal (static) resolver context. */
+__BEGIN_DECLS
+extern struct __res_state *__res_state(void) __attribute__ ((__const__));
+__END_DECLS
+#define _res (*__res_state())
 
-#ifndef __BIND_NOSTATIC
-
+#if 0
 #define fp_nquery		__fp_nquery
 #define fp_query		__fp_query
 #define hostalias		__hostalias
 #define p_query			__p_query
+#endif
 #define res_close		__res_close
 #define res_init		__res_init
+#if 0
 #define res_isourserver		__res_isourserver
+#endif
 #define res_mkquery		__res_mkquery
 #define res_query		__res_query
 #define res_querydomain		__res_querydomain
 #define res_search		__res_search
+#if 0
 #define res_send		__res_send
+#endif
 
 __BEGIN_DECLS
-void		fp_nquery __P((const u_char *, int, FILE *));
-void		fp_query __P((const u_char *, FILE *));
-const char *	hostalias __P((const char *));
-void		p_query __P((const u_char *));
-void		res_close __P((void));
-int		res_init __P((void));
-int		res_isourserver __P((const struct sockaddr_in *));
-int		res_mkquery __P((int, const char *, int, int, const u_char *,
-				 int, const u_char *, u_char *, int));
-int		res_query __P((const char *, int, int, u_char *, int));
-int		res_querydomain __P((const char *, const char *, int, int,
-				     u_char *, int));
-int		res_search __P((const char *, int, int, u_char *, int));
-int		res_send __P((const u_char *, int, u_char *, int));
+#if 0
+void		fp_nquery (const u_char *, int, FILE *) __THROW;
+void		fp_query (const u_char *, FILE *) __THROW;
+const char *	hostalias (const char *) __THROW;
+void		p_query (const u_char *) __THROW;
+#endif
+#ifdef __UCLIBC_HAS_BSD_RES_CLOSE__
+void		res_close (void) __THROW;
+#endif
+int		res_init (void) __THROW;
+#if 0
+int		res_isourserver (const struct sockaddr_in *) __THROW;
+#endif
+int		res_mkquery (int, const char *, int, int, const u_char *,
+			     int, const u_char *, u_char *, int) __THROW;
+int		res_query (const char *, int, int, u_char *, int) __THROW;
+int		res_querydomain (const char *, const char *, int, int,
+				 u_char *, int) __THROW;
+int		res_search (const char *, int, int, u_char *, int) __THROW;
+#if 0
+int		res_send (const u_char *, int, u_char *, int) __THROW;
+#endif
 __END_DECLS
 
-#endif /* !__BIND_NOSTATIC */
-
-
-#if !defined(SHARED_LIBBIND) || defined(LIB)
-/*
- * If libbind is a shared object (well, DLL anyway)
- * these externs break the linker when resolv.h is
- * included by a lib client (like named)
- * Make them go away if a client is including this
- *
- */
-extern const struct res_sym __p_key_syms[];
-extern const struct res_sym __p_cert_syms[];
-extern const struct res_sym __p_class_syms[];
-extern const struct res_sym __p_type_syms[];
-extern const struct res_sym __p_rcode_syms[];
-#endif /* SHARED_LIBBIND */
-
+#if 0
 #define b64_ntop		__b64_ntop
 #define b64_pton		__b64_pton
-#define dn_comp			__dn_comp
 #define dn_count_labels		__dn_count_labels
+#endif
+#define dn_comp			__dn_comp
 #define dn_expand		__dn_expand
 #define dn_skipname		__dn_skipname
+#define res_ninit		__res_ninit
+#define res_nclose		__res_nclose
+#if 0
 #define fp_resstat		__fp_resstat
 #define loc_aton		__loc_aton
 #define loc_ntoa		__loc_ntoa
@@ -296,8 +358,6 @@ extern const struct res_sym __p_rcode_syms[];
 #define res_hostalias		__res_hostalias
 #define res_mailok		__res_mailok
 #define res_nameinquery		__res_nameinquery
-#define res_nclose		__res_nclose
-#define res_ninit		__res_ninit
 #define res_nmkquery		__res_nmkquery
 #define res_npquery		__res_npquery
 #define res_nquery		__res_nquery
@@ -311,63 +371,73 @@ extern const struct res_sym __p_rcode_syms[];
 #define sym_ntop		__sym_ntop
 #define sym_ntos		__sym_ntos
 #define sym_ston		__sym_ston
+#endif
 __BEGIN_DECLS
-int		res_hnok __P((const char *));
-int		res_ownok __P((const char *));
-int		res_mailok __P((const char *));
-int		res_dnok __P((const char *));
-int		sym_ston __P((const struct res_sym *, const char *, int *));
-const char *	sym_ntos __P((const struct res_sym *, int, int *));
-const char *	sym_ntop __P((const struct res_sym *, int, int *));
-int		b64_ntop __P((u_char const *, size_t, char *, size_t));
-int		b64_pton __P((char const *, u_char *, size_t));
-int		loc_aton __P((const char *ascii, u_char *binary));
-const char *	loc_ntoa __P((const u_char *binary, char *ascii));
-int		dn_skipname __P((const u_char *, const u_char *));
-void		putlong __P((u_int32_t, u_char *));
-void		putshort __P((u_int16_t, u_char *));
-const char *	p_class __P((int));
-const char *	p_time __P((u_int32_t));
-const char *	p_type __P((int));
-const char *	p_rcode __P((int));
-const u_char *	p_cdnname __P((const u_char *, const u_char *, int, FILE *));
-const u_char *	p_cdname __P((const u_char *, const u_char *, FILE *));
-const u_char *	p_fqnname __P((const u_char *cp, const u_char *msg,
-			       int, char *, int));
-const u_char *	p_fqname __P((const u_char *, const u_char *, FILE *));
-const char *	p_option __P((u_long option));
-char *		p_secstodate __P((u_long));
-int		dn_count_labels __P((const char *));
-int		dn_comp __P((const char *, u_char *, int,
-			     u_char **, u_char **));
-int		dn_expand __P((const u_char *, const u_char *, const u_char *,
-			       char *, int));
-u_int		res_randomid __P((void));
-int		res_nameinquery __P((const char *, int, int,
-				     const u_char *, const u_char *));
-int		res_queriesmatch __P((const u_char *, const u_char *,
-				      const u_char *, const u_char *));
-const char *	p_section __P((int section, int opcode));
+#if 0
+int		res_hnok (const char *) __THROW;
+int		res_ownok (const char *) __THROW;
+int		res_mailok (const char *) __THROW;
+int		res_dnok (const char *) __THROW;
+int		sym_ston (const struct res_sym *, const char *, int *) __THROW;
+const char *	sym_ntos (const struct res_sym *, int, int *) __THROW;
+const char *	sym_ntop (const struct res_sym *, int, int *) __THROW;
+int		b64_ntop (u_char const *, size_t, char *, size_t) __THROW;
+int		b64_pton (char const *, u_char *, size_t) __THROW;
+int		loc_aton (const char *ascii, u_char *binary) __THROW;
+const char *	loc_ntoa (const u_char *binary, char *ascii) __THROW;
+void		putlong (u_int32_t, u_char *) __THROW;
+void		putshort (u_int16_t, u_char *) __THROW;
+const char *	p_class (int) __THROW;
+const char *	p_time (u_int32_t) __THROW;
+const char *	p_type (int) __THROW;
+const char *	p_rcode (int) __THROW;
+const u_char *	p_cdnname (const u_char *, const u_char *, int, FILE *)
+     __THROW;
+const u_char *	p_cdname (const u_char *, const u_char *, FILE *) __THROW;
+const u_char *	p_fqnname (const u_char *cp, const u_char *msg,
+			   int, char *, int) __THROW;
+const u_char *	p_fqname (const u_char *, const u_char *, FILE *) __THROW;
+const char *	p_option (u_long option) __THROW;
+char *		p_secstodate (u_long) __THROW;
+int		dn_count_labels (const char *) __THROW;
+#endif
+int		dn_skipname (const u_char *, const u_char *) __THROW;
+int		dn_comp (const char *, u_char *, int, u_char **, u_char **)
+     __THROW;
+int		dn_expand (const u_char *, const u_char *, const u_char *,
+			   char *, int) __THROW;
+int		res_ninit (res_state) __THROW;
+void		res_nclose (res_state) __THROW;
+#if 0
+u_int		res_randomid (void) __THROW;
+int		res_nameinquery (const char *, int, int,
+				 const u_char *, const u_char *) __THROW;
+int		res_queriesmatch (const u_char *, const u_char *,
+				  const u_char *, const u_char *) __THROW;
+const char *	p_section (int section, int opcode) __THROW;
 /* Things involving a resolver context. */
-int		res_ninit __P((res_state));
-int		res_nisourserver __P((const res_state,
-				      const struct sockaddr_in *));
-void		fp_resstat __P((const res_state, FILE *));
-void		res_npquery __P((const res_state, const u_char *, int, FILE *));
-const char *	res_hostalias __P((const res_state, const char *,
-				   char *, size_t));
-int		res_nquery __P((res_state,
-				const char *, int, int, u_char *, int));
-int		res_nsearch __P((res_state, const char *, int,
-				 int, u_char *, int));
-int		res_nquerydomain __P((res_state,
-				      const char *, const char *, int, int,
-				      u_char *, int));
-int		res_nmkquery __P((res_state,
-				  int, const char *, int, int, const u_char *,
-				  int, const u_char *, u_char *, int));
-int		res_nsend __P((res_state, const u_char *, int, u_char *, int));
-void		res_nclose __P((res_state));
+int		res_nisourserver (const res_state,
+				  const struct sockaddr_in *) __THROW;
+void		fp_resstat (const res_state, FILE *) __THROW;
+void		res_npquery (const res_state, const u_char *, int, FILE *)
+     __THROW;
+const char *	res_hostalias (const res_state, const char *, char *, size_t)
+     __THROW;
+int		res_nquery (res_state, const char *, int, int, u_char *, int)
+     __THROW;
+int		res_nsearch (res_state, const char *, int, int, u_char *, int)
+     __THROW;
+int		res_nquerydomain (res_state, const char *, const char *, int,
+				  int, u_char *, int) __THROW;
+int		res_nmkquery (res_state, int, const char *, int, int,
+			      const u_char *, int, const u_char *, u_char *,
+			      int) __THROW;
+int		res_nsend (res_state, const u_char *, int, u_char *, int)
+     __THROW;
+#endif
 __END_DECLS
+
+
+#endif /* _RESOLV_H_ */
 
 #endif /* !_RESOLV_H_ */

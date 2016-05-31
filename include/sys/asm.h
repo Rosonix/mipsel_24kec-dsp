@@ -97,6 +97,7 @@ l:							\
 # define SETUP_GPX64_L(cp_reg, ra_save, l)
 # define RESTORE_GP64
 # define USE_ALT_CP(a)
+# define L(label) $L ## label
 #else /* (_MIPS_SIM == _MIPS_SIM_ABI64) || (_MIPS_SIM == _MIPS_SIM_NABI32) */
 /*
  * For callee-saved gp calling convention:
@@ -131,6 +132,7 @@ l:							\
 /* Use alternate register for context pointer.  */
 # define USE_ALT_CP(reg)	\
 		.cplocal reg
+# define L(label) .L ## label
 #endif /* _MIPS_SIM != _MIPS_SIM_ABI32 */
 
 /*
@@ -468,6 +470,22 @@ symbol		=	value
     (_MIPS_ISA == _MIPS_ISA_MIPS5) || (_MIPS_ISA == _MIPS_ISA_MIPS64)
 # define MFC0	dmfc0
 # define MTC0	dmtc0
+#endif
+
+/* The MIPS archtectures do not have a uniform memory model.  Particular
+   platforms may provide additional guarantees - for instance, the R4000
+   LL and SC instructions implicitly perform a SYNC, and the 4K promises
+   strong ordering.
+
+   However, in the absence of those guarantees, we must assume weak ordering
+   and SYNC explicitly where necessary.
+
+   Some obsolete MIPS processors may not support the SYNC instruction.  This
+   applies to "true" MIPS I processors; most of the processors which compile
+   using MIPS I implement parts of MIPS II.  */
+
+#ifndef MIPS_SYNC
+# define MIPS_SYNC      sync
 #endif
 
 #endif /* sys/asm.h */

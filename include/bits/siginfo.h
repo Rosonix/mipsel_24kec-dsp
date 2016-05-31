@@ -1,5 +1,6 @@
 /* siginfo_t, sigevent and constants.  Linux/MIPS version.
-   Copyright (C) 1997, 1998, 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 2000, 2001, 2002, 2003, 2004, 2005
+	Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -22,6 +23,8 @@
 # error "Never include this file directly.  Use <signal.h> instead"
 #endif
 
+#include <bits/wordsize.h>
+
 #if (!defined __have_sigval_t \
      && (defined _SIGNAL_H || defined __need_siginfo_t \
 	 || defined __need_sigevent_t))
@@ -39,8 +42,13 @@ typedef union sigval
      && (defined _SIGNAL_H || defined __need_siginfo_t))
 # define __have_siginfo_t	1
 
-# define __SI_MAX_SIZE     128
-# define __SI_PAD_SIZE     ((__SI_MAX_SIZE / sizeof (int)) - 3)
+# define __SI_MAX_SIZE		128
+# if __WORDSIZE == 64
+#  define __SI_PAD_SIZE		((__SI_MAX_SIZE / sizeof (int)) - 4)
+# else
+#  define __SI_PAD_SIZE		((__SI_MAX_SIZE / sizeof (int)) - 3)
+# endif
+
 
 typedef struct siginfo
   {
@@ -48,6 +56,8 @@ typedef struct siginfo
     int si_code;		/* Signal code.  */
     int si_errno;		/* If non-zero, an errno value associated with
 				   this signal, as defined in <errno.h>.  */
+    int __pad0[__SI_MAX_SIZE / sizeof (int) - __SI_PAD_SIZE - 3];
+				/* Explicit padding.  */
 
     union
       {
@@ -97,6 +107,14 @@ typedef struct siginfo
 	    __uid_t si_uid;	/* Real user ID of sending process.  */
 	    sigval_t si_sigval;	/* Signal value.  */
 	  } _rt;
+
+	/* SIGSYS.  */
+	struct
+	  {
+	    void *_call_addr;   /* Calling user insn.  */
+	    int _syscall;       /* Triggering system call number.  */
+	    unsigned int _arch; /* AUDIT_ARCH_* of syscall.  */
+	  } _sigsys;
       } _sifields;
   } siginfo_t;
 
@@ -113,15 +131,20 @@ typedef struct siginfo
 # define si_addr	_sifields._sigfault.si_addr
 # define si_band	_sifields._sigpoll.si_band
 # define si_fd		_sifields._sigpoll.si_fd
+# define si_call_addr	_sifields._sigsys._call_addr
+# define si_syscall	_sifields._sigsys._syscall
+# define si_arch	_sifields._sigsys._arch
 
 
 /* Values for `si_code'.  Positive values are reserved for kernel-generated
    signals.  */
 enum
 {
-  SI_ASYNCNL = -6,		/* Sent by asynch name lookup completion.  */
+  SI_ASYNCNL = -60,		/* Sent by asynch name lookup completion.  */
 # define SI_ASYNCNL	SI_ASYNCNL
-  SI_SIGIO,			/* Sent by queued SIGIO. */
+  SI_TKILL = -6,		/* Sent by tkill.  */
+# define SI_TKILL	SI_TKILL
+  SI_SIGIO,			/* Sent by queued SIGIO.  */
 # define SI_SIGIO	SI_SIGIO
   SI_MESGQ,			/* Sent by real time mesq state change.  */
 # define SI_MESGQ	SI_MESGQ
@@ -147,7 +170,7 @@ enum
 # define ILL_ILLOPN	ILL_ILLOPN
   ILL_ILLADR,			/* Illegal addressing mode.  */
 # define ILL_ILLADR	ILL_ILLADR
-  ILL_ILLTRP,			/* Illegal trap. */
+  ILL_ILLTRP,			/* Illegal trap.  */
 # define ILL_ILLTRP	ILL_ILLTRP
   ILL_PRVOPC,			/* Privileged opcode.  */
 # define ILL_PRVOPC	ILL_PRVOPC
@@ -253,7 +276,11 @@ enum
 
 /* Structure to transport application-defined values with signals.  */
 # define __SIGEV_MAX_SIZE	64
-# define __SIGEV_PAD_SIZE	((__SIGEV_MAX_SIZE / sizeof (int)) - 3)
+# if __WORDSIZE == 64
+#  define __SIGEV_PAD_SIZE	((__SIGEV_MAX_SIZE / sizeof (int)) - 4)
+# else
+#  define __SIGEV_PAD_SIZE	((__SIGEV_MAX_SIZE / sizeof (int)) - 3)
+# endif
 
 /* Forward declaration of the `pthread_attr_t' type.  */
 struct __pthread_attr_s;
@@ -271,8 +298,8 @@ typedef struct sigevent
 
 	struct
 	  {
-	    void (*_function) (sigval_t);	  /* Function to start.  */
-	    struct __pthread_attr_s *_attribute;  /* Really pthread_attr_t.  */
+	    void (*_function) (sigval_t);	/* Function to start.  */
+	    void *_attribute;			/* Really pthread_attr_t.  */
 	  } _sigev_thread;
       } _sigev_un;
   } sigevent_t;
@@ -288,10 +315,11 @@ enum
 # define SIGEV_SIGNAL	SIGEV_SIGNAL
   SIGEV_NONE,			/* Other notification: meaningless.  */
 # define SIGEV_NONE	SIGEV_NONE
-  SIGEV_CALLBACK,		/* Deliver via thread creation.  */
-# define SIGEV_CALLBACK	SIGEV_CALLBACK
-  SIGEV_THREAD			/* Deliver via thread creation.  */
+  SIGEV_THREAD,			/* Deliver via thread creation.  */
 # define SIGEV_THREAD	SIGEV_THREAD
+
+  SIGEV_THREAD_ID = 4		/* Send signal to specific thread.  */
+#define SIGEV_THREAD_ID	SIGEV_THREAD_ID
 };
 
 #endif	/* have _SIGNAL_H.  */

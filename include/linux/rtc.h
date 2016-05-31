@@ -4,7 +4,7 @@
  * service. It is used with both the legacy mc146818 and also  EFI
  * Struct rtc_time and first 12 ioctl by Paul Gortmaker, 1996 - separated out
  * from <linux/mc146818rtc.h> to this file for 2.4 kernels.
- * 
+ *
  * Copyright (C) 1999 Hewlett-Packard Co.
  * Copyright (C) 1999 Stephane Eranian <eranian@hpl.hp.com>
  */
@@ -13,7 +13,7 @@
 
 /*
  * The struct used to pass data via the following ioctl. Similar to the
- * struct tm in <time.h>, but it needs to be here so that the kernel 
+ * struct tm in <time.h>, but it needs to be here so that the kernel
  * source is self contained, allowing cross-compiles, etc. etc.
  */
 
@@ -34,8 +34,8 @@ struct rtc_time {
  * alarm API.
  */
 struct rtc_wkalrm {
-	unsigned char enabled;	/* 0 = alarm disable, 1 = alarm disabled */
-	unsigned char pending;  /* 0 = alarm pending, 1 = alarm not pending */
+	unsigned char enabled;	/* 0 = alarm disabled, 1 = alarm enabled */
+	unsigned char pending;  /* 0 = alarm not pending, 1 = alarm pending */
 	struct rtc_time time;	/* time the alarm is set to */
 };
 
@@ -50,7 +50,7 @@ struct rtc_wkalrm {
  *   pll_value*pll_posmult/pll_clock
  * -ve pll_value means clock will run slower by
  *   pll_value*pll_negmult/pll_clock
- */ 
+ */
 
 struct rtc_pll_info {
 	int pll_ctrl;       /* placeholder for fancier control */
@@ -90,4 +90,18 @@ struct rtc_pll_info {
 
 #define RTC_PLL_GET	_IOR('p', 0x11, struct rtc_pll_info)  /* Get PLL correction */
 #define RTC_PLL_SET	_IOW('p', 0x12, struct rtc_pll_info)  /* Set PLL correction */
+
+#define RTC_VL_READ	_IOR('p', 0x13, int)	/* Voltage low detector */
+#define RTC_VL_CLR	_IO('p', 0x14)		/* Clear voltage low information */
+
+/* interrupt flags */
+#define RTC_IRQF 0x80	/* Any of the following is active */
+#define RTC_PF 0x40	/* Periodic interrupt */
+#define RTC_AF 0x20	/* Alarm interrupt */
+#define RTC_UF 0x10	/* Update interrupt for 1Hz RTC */
+
+
+#define RTC_MAX_FREQ	8192
+
+
 #endif /* _LINUX_RTC_H_ */

@@ -51,11 +51,7 @@
 # define __malloc_ptr_t  char *
 #endif
 
-#ifdef _LIBC
-/* Used by GNU libc internals. */
-# define __malloc_size_t size_t
-# define __malloc_ptrdiff_t ptrdiff_t
-#elif !defined __attribute_malloc__
+#if   !defined __attribute_malloc__
 # define __attribute_malloc__
 #endif
 
@@ -64,11 +60,13 @@
 /* GCC can always grok prototypes.  For C++ programs we add throw()
    to help it optimize the function calls.  But this works only with
    gcc 2.8.x and egcs.  */
+#ifndef __THROW
 # if defined __cplusplus && (__GNUC__ >= 3 || __GNUC_MINOR__ >= 8)
 #  define __THROW	throw ()
 # else
 #  define __THROW
 # endif
+#endif
 # define __MALLOC_P(args)	args __THROW
 /* This macro will be used for functions which might take C++ callback
    functions.  */
@@ -174,15 +172,23 @@ extern void malloc_stats(FILE *file);
 #define M_MMAP_THRESHOLD    -3
 #define M_MMAP_MAX          -4
 #define M_CHECK_ACTION      -5
+#define M_PERTURB           -6
 
 /* General SVID/XPG interface to tunable parameters. */
 extern int mallopt __MALLOC_P ((int __param, int __val));
 
 #endif /* __MALLOC_STANDARD__ */
 
+/* uClibc may use malloc internally in situations where user can not be
+ * notified about out-of-memory condition. In this situation uClibc will
+ * call __uc_malloc_failed if it is non-NULL, and retry allocation
+ * if it returns. If __uc_malloc_failed is NULL, uclibc will _exit(1).
+ * NB: do not use stdio in __uc_malloc_failed handler! */
+extern void *__uc_malloc(size_t size);
+extern void (*__uc_malloc_failed)(size_t size);
 
 #ifdef __cplusplus
-}; /* end of extern "C" */
+} /* end of extern "C" */
 #endif
 
 #endif /* malloc.h */

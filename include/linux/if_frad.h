@@ -24,10 +24,7 @@
 #ifndef _FRAD_H_
 #define _FRAD_H_
 
-#include <linux/config.h>
 #include <linux/if.h>
-
-#if defined(CONFIG_DLCI) || defined(CONFIG_DLCI_MODULE)
 
 /* Structures and constants associated with the DLCI device driver */
 
@@ -71,11 +68,6 @@ struct dlci_conf {
 #define DLCI_BUFFER_IF		0x0008
 
 #define DLCI_VALID_FLAGS	0x000B
-
-/* FRAD driver uses these to indicate what it did with packet */
-#define DLCI_RET_OK		0x00
-#define DLCI_RET_ERR		0x01
-#define DLCI_RET_DROP		0x02
 
 /* defines for the actual Frame Relay hardware */
 #define FRAD_GET_CONF	(SIOCDEVPRIVATE)
@@ -126,76 +118,5 @@ struct frad_conf
 #define FRAD_CLOCK_INT		0x0001
 #define FRAD_CLOCK_EXT		0x0000
 
-#ifdef __KERNEL__
 
-/* these are the fields of an RFC 1490 header */
-struct frhdr
-{
-   unsigned char  control	__attribute__((packed));
-
-   /* for IP packets, this can be the NLPID */
-   unsigned char  pad		__attribute__((packed)); 
-
-   unsigned char  NLPID		__attribute__((packed));
-   unsigned char  OUI[3]	__attribute__((packed));
-   unsigned short PID		__attribute__((packed));
-
-#define IP_NLPID pad 
-};
-
-/* see RFC 1490 for the definition of the following */
-#define FRAD_I_UI		0x03
-
-#define FRAD_P_PADDING		0x00
-#define FRAD_P_Q933		0x08
-#define FRAD_P_SNAP		0x80
-#define FRAD_P_CLNP		0x81
-#define FRAD_P_IP		0xCC
-
-struct dlci_local
-{
-   struct net_device_stats stats;
-   struct net_device          *slave;
-   struct dlci_conf       config;
-   int                    configured;
-
-   /* callback function */
-   void              (*receive)(struct sk_buff *skb, struct net_device *);
-};
-
-struct frad_local
-{
-   struct net_device_stats stats;
-
-   /* devices which this FRAD is slaved to */
-   struct net_device     *master[CONFIG_DLCI_MAX];
-   short             dlci[CONFIG_DLCI_MAX];
-
-   struct frad_conf  config;
-   int               configured;	/* has this device been configured */
-   int               initialized;	/* mem_start, port, irq set ? */
-
-   /* callback functions */
-   int               (*activate)(struct net_device *, struct net_device *);
-   int               (*deactivate)(struct net_device *, struct net_device *);
-   int               (*assoc)(struct net_device *, struct net_device *);
-   int               (*deassoc)(struct net_device *, struct net_device *);
-   int               (*dlci_conf)(struct net_device *, struct net_device *, int get);
-
-   /* fields that are used by the Sangoma SDLA cards */
-   struct timer_list timer;
-   int               type;		/* adapter type */
-   int               state;		/* state of the S502/8 control latch */
-   int               buffer;		/* current buffer for S508 firmware */
-};
-
-int register_frad(const char *name);
-int unregister_frad(const char *name);
-
-extern int (*dlci_ioctl_hook)(unsigned int, void *);
-
-#endif /* __KERNEL__ */
-
-#endif /* CONFIG_DLCI || CONFIG_DLCI_MODULE */
-
-#endif
+#endif /* _FRAD_H_ */

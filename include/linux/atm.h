@@ -16,13 +16,11 @@
  * documentation. Do not change them.
  */
 
-#ifdef __KERNEL__
-#include <linux/socket.h>
-#include <linux/types.h>
-#endif
+
 #include <linux/atmapi.h>
 #include <linux/atmsap.h>
 #include <linux/atmioc.h>
+#include <linux/types.h>
 
 
 /* general ATM constants */
@@ -77,6 +75,9 @@
 			    /* Service Access Point */
 #define SO_ATMPVC	__SO_ENCODE(SOL_ATM,4,struct sockaddr_atmpvc)
 			    /* "PVC" address (also for SVCs); get only */
+#define SO_MULTIPOINT	__SO_ENCODE(SOL_ATM, 5, int)
+			    /* make this vc a p2mp */
+
 
 /*
  * Note @@@: since the socket layers don't really distinguish the control and
@@ -138,6 +139,9 @@ struct atm_trafprm {
 	int		min_pcr;	/* minimum PCR in cells per second */
 	int		max_cdv;	/* maximum CDV in microseconds */
 	int		max_sdu;	/* maximum SDU in bytes */
+	int		scr;		/* sustained rate in cells per second */
+	int		mbs;		/* maximum burst size (MBS) in cells */
+	int		cdv;		/* Cell delay varition */
         /* extra params for ABR */
         unsigned int 	icr;         	/* Initial Cell Rate (24-bit) */
         unsigned int	tbe;		/* Transient Buffer Exposure (24-bit) */ 
@@ -208,7 +212,7 @@ struct sockaddr_atmsvc {
         char		pub[ATM_E164_LEN+1]; /* public address (E.164) */
     					/* unused addresses must be bzero'ed */
 	char		lij_type;	/* role in LIJ call; one of ATM_LIJ* */
-	uint32_t	lij_id;		/* LIJ call identifier */
+	__u32	lij_id;		/* LIJ call identifier */
     } sas_addr __ATM_API_ALIGN;		/* SVC address */
 };
 
@@ -230,21 +234,11 @@ static __inline__ int atmpvc_addr_in_use(struct sockaddr_atmpvc addr)
  */
 
 struct atmif_sioc {
-    int number;
-    int length;
-    void *arg;
+	int number;
+	int length;
+	void *arg;
 };
 
+
 typedef unsigned short atm_backend_t;
-
-#ifdef __KERNEL__
-
-#include <linux/net.h>	/* struct net_proto */
-
-
-void atmpvc_proto_init(struct net_proto *pro);
-void atmsvc_proto_init(struct net_proto *pro);
-
-#endif /* __KERNEL__ */
-
-#endif
+#endif /* _LINUX_ATM_H */

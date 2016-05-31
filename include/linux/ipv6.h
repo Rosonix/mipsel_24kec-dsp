@@ -1,6 +1,7 @@
 #ifndef _IPV6_H
 #define _IPV6_H
 
+#include <linux/types.h>
 #include <linux/in6.h>
 #include <asm/byteorder.h>
 
@@ -20,6 +21,10 @@ struct in6_pktinfo {
 	int		ipi6_ifindex;
 };
 
+struct ip6_mtuinfo {
+	struct sockaddr_in6	ip6m_addr;
+	__u32			ip6m_mtu;
+};
 
 struct in6_ifreq {
 	struct in6_addr	ifr6_addr;
@@ -27,8 +32,9 @@ struct in6_ifreq {
 	int		ifr6_ifindex; 
 };
 
-#define IPV6_SRCRT_STRICT	0x01	/* this hop must be a neighbor	*/
-#define IPV6_SRCRT_TYPE_0	0	/* IPv6 type 0 Routing Header	*/
+#define IPV6_SRCRT_STRICT	0x01	/* Deprecated; will be removed */
+#define IPV6_SRCRT_TYPE_0	0	/* Deprecated; will be removed */
+#define IPV6_SRCRT_TYPE_2	2	/* IPv6 type 2 Routing Header	*/
 
 /*
  *	routing header
@@ -52,14 +58,13 @@ struct ipv6_opt_hdr {
 	/* 
 	 * TLV encoded option data follows.
 	 */
-};
+} __attribute__((packed));	/* required for some archs */
 
 #define ipv6_destopt_hdr ipv6_opt_hdr
 #define ipv6_hopopt_hdr  ipv6_opt_hdr
 
-#ifdef __KERNEL__
-#define ipv6_optlen(p)  (((p)->hdrlen+1) << 3)
-#endif
+/* Router Alert option values (RFC2711) */
+#define IPV6_OPT_ROUTERALERT_MLD	0x0000	/* MLD(RFC2710) */
 
 /*
  *	routing header type 0 (used in cmsghdr struct)
@@ -67,11 +72,33 @@ struct ipv6_opt_hdr {
 
 struct rt0_hdr {
 	struct ipv6_rt_hdr	rt_hdr;
-	__u32			bitmap;		/* strict/loose bit map */
+	__u32			reserved;
 	struct in6_addr		addr[0];
 
 #define rt0_type		rt_hdr.type
 };
+
+/*
+ *	routing header type 2
+ */
+
+struct rt2_hdr {
+	struct ipv6_rt_hdr	rt_hdr;
+	__u32			reserved;
+	struct in6_addr		addr;
+
+#define rt2_type		rt_hdr.type
+};
+
+/*
+ *	home address option in destination options header
+ */
+
+struct ipv6_destopt_hao {
+	__u8			type;
+	__u8			length;
+	struct in6_addr		addr;
+} __attribute__((packed));
 
 /*
  *	IPv6 fixed header
@@ -92,7 +119,7 @@ struct ipv6hdr {
 #endif
 	__u8			flow_lbl[3];
 
-	__u16			payload_len;
+	__be16			payload_len;
 	__u8			nexthdr;
 	__u8			hop_limit;
 
@@ -100,29 +127,6 @@ struct ipv6hdr {
 	struct	in6_addr	daddr;
 };
 
-/*
- * This structure contains configuration options per IPv6 link.
- */
-struct ipv6_devconf {
-	__s32		forwarding;
-	__s32		hop_limit;
-	__s32		mtu6;
-	__s32		accept_ra;
-	__s32		accept_redirects;
-	__s32		autoconf;
-	__s32		dad_transmits;
-	__s32		rtr_solicits;
-	__s32		rtr_solicit_interval;
-	__s32		rtr_solicit_delay;
-#ifdef CONFIG_IPV6_PRIVACY
-	__s32		use_tempaddr;
-	__s32		temp_valid_lft;
-	__s32		temp_prefered_lft;
-	__s32		regen_max_retry;
-	__s32		max_desync_factor;
-#endif
-	void		*sysctl;
-};
 
 /* index values for the variables in ipv6_devconf */
 enum {
@@ -136,34 +140,32 @@ enum {
 	DEVCONF_RTR_SOLICITS,
 	DEVCONF_RTR_SOLICIT_INTERVAL,
 	DEVCONF_RTR_SOLICIT_DELAY,
-#ifdef CONFIG_IPV6_PRIVACY
 	DEVCONF_USE_TEMPADDR,
 	DEVCONF_TEMP_VALID_LFT,
 	DEVCONF_TEMP_PREFERED_LFT,
 	DEVCONF_REGEN_MAX_RETRY,
 	DEVCONF_MAX_DESYNC_FACTOR,
-#endif
+	DEVCONF_MAX_ADDRESSES,
+	DEVCONF_FORCE_MLD_VERSION,
+	DEVCONF_ACCEPT_RA_DEFRTR,
+	DEVCONF_ACCEPT_RA_PINFO,
+	DEVCONF_ACCEPT_RA_RTR_PREF,
+	DEVCONF_RTR_PROBE_INTERVAL,
+	DEVCONF_ACCEPT_RA_RT_INFO_MAX_PLEN,
+	DEVCONF_PROXY_NDP,
+	DEVCONF_OPTIMISTIC_DAD,
+	DEVCONF_ACCEPT_SOURCE_ROUTE,
+	DEVCONF_MC_FORWARDING,
+	DEVCONF_DISABLE_IPV6,
+	DEVCONF_ACCEPT_DAD,
+	DEVCONF_FORCE_TLLAO,
+	DEVCONF_NDISC_NOTIFY,
+	DEVCONF_MLDV1_UNSOLICITED_REPORT_INTERVAL,
+	DEVCONF_MLDV2_UNSOLICITED_REPORT_INTERVAL,
+	DEVCONF_SUPPRESS_FRAG_NDISC,
+	DEVCONF_ACCEPT_RA_FROM_LOCAL,
 	DEVCONF_MAX
 };
 
-#ifdef __KERNEL__
 
-/* 
-   This structure contains results of exthdrs parsing
-   as offsets from skb->nh.
- */
-
-struct inet6_skb_parm
-{
-	int			iif;
-	__u16			ra;
-	__u16			hop;
-	__u16			auth;
-	__u16			dst0;
-	__u16			srcrt;
-	__u16			dst1;
-};
-
-#endif
-
-#endif
+#endif /* _IPV6_H */

@@ -17,13 +17,19 @@
 
 #include <linux/types.h>
 
+#include <asm/param.h>
+#include <asm/byteorder.h>
+
 /* 
  *  comp_t is a 16-bit "floating" point number with a 3-bit base 8
- *  exponent and a 13-bit fraction. See linux/kernel/acct.c for the
- *  specific encoding system used.
+ *  exponent and a 13-bit fraction.
+ *  comp2_t is 24-bit with 5-bit base 2 exponent and 20 bit fraction
+ *  (leading 1 not stored).
+ *  See linux/kernel/acct.c for the specific encoding systems used.
  */
 
 typedef __u16	comp_t;
+typedef __u32	comp2_t;
 
 /*
  *   accounting file record
@@ -36,27 +42,53 @@ typedef __u16	comp_t;
 
 struct acct
 {
-	char		ac_flag;		/* Accounting Flags */
-/*
- *	No binary format break with 2.0 - but when we hit 32bit uid we'll
- *	have to bite one
- */
-	__u16		ac_uid;			/* Accounting Real User ID */
-	__u16		ac_gid;			/* Accounting Real Group ID */
-	__u16		ac_tty;			/* Accounting Control Terminal */
-	__u32		ac_btime;		/* Accounting Process Creation Time */
-	comp_t		ac_utime;		/* Accounting User Time */
-	comp_t		ac_stime;		/* Accounting System Time */
-	comp_t		ac_etime;		/* Accounting Elapsed Time */
-	comp_t		ac_mem;			/* Accounting Average Memory Usage */
-	comp_t		ac_io;			/* Accounting Chars Transferred */
-	comp_t		ac_rw;			/* Accounting Blocks Read or Written */
-	comp_t		ac_minflt;		/* Accounting Minor Pagefaults */
-	comp_t		ac_majflt;		/* Accounting Major Pagefaults */
-	comp_t		ac_swaps;		/* Accounting Number of Swaps */
-	__u32		ac_exitcode;		/* Accounting Exitcode */
-	char		ac_comm[ACCT_COMM + 1];	/* Accounting Command Name */
-	char		ac_pad[10];		/* Accounting Padding Bytes */
+	char		ac_flag;		/* Flags */
+	char		ac_version;		/* Always set to ACCT_VERSION */
+	/* for binary compatibility back until 2.0 */
+	__u16		ac_uid16;		/* LSB of Real User ID */
+	__u16		ac_gid16;		/* LSB of Real Group ID */
+	__u16		ac_tty;			/* Control Terminal */
+	__u32		ac_btime;		/* Process Creation Time */
+	comp_t		ac_utime;		/* User Time */
+	comp_t		ac_stime;		/* System Time */
+	comp_t		ac_etime;		/* Elapsed Time */
+	comp_t		ac_mem;			/* Average Memory Usage */
+	comp_t		ac_io;			/* Chars Transferred */
+	comp_t		ac_rw;			/* Blocks Read or Written */
+	comp_t		ac_minflt;		/* Minor Pagefaults */
+	comp_t		ac_majflt;		/* Major Pagefaults */
+	comp_t		ac_swaps;		/* Number of Swaps */
+/* m68k had no padding here. */
+	__u16		ac_ahz;			/* AHZ */
+	__u32		ac_exitcode;		/* Exitcode */
+	char		ac_comm[ACCT_COMM + 1];	/* Command Name */
+	__u8		ac_etime_hi;		/* Elapsed Time MSB */
+	__u16		ac_etime_lo;		/* Elapsed Time LSB */
+	__u32		ac_uid;			/* Real User ID */
+	__u32		ac_gid;			/* Real Group ID */
+};
+
+struct acct_v3
+{
+	char		ac_flag;		/* Flags */
+	char		ac_version;		/* Always set to ACCT_VERSION */
+	__u16		ac_tty;			/* Control Terminal */
+	__u32		ac_exitcode;		/* Exitcode */
+	__u32		ac_uid;			/* Real User ID */
+	__u32		ac_gid;			/* Real Group ID */
+	__u32		ac_pid;			/* Process ID */
+	__u32		ac_ppid;		/* Parent Process ID */
+	__u32		ac_btime;		/* Process Creation Time */
+	float		ac_etime;		/* Elapsed Time */
+	comp_t		ac_utime;		/* User Time */
+	comp_t		ac_stime;		/* System Time */
+	comp_t		ac_mem;			/* Average Memory Usage */
+	comp_t		ac_io;			/* Chars Transferred */
+	comp_t		ac_rw;			/* Blocks Read or Written */
+	comp_t		ac_minflt;		/* Minor Pagefaults */
+	comp_t		ac_majflt;		/* Major Pagefaults */
+	comp_t		ac_swaps;		/* Number of Swaps */
+	char		ac_comm[ACCT_COMM];	/* Command Name */
 };
 
 /*
@@ -69,20 +101,16 @@ struct acct
 #define ACORE		0x08	/* ... dumped core */
 #define AXSIG		0x10	/* ... was killed by a signal */
 
-#define AHZ		100
-
-#ifdef __KERNEL__
-
-#include <linux/config.h>
-
-#ifdef CONFIG_BSD_PROCESS_ACCT
-extern void acct_auto_close(kdev_t dev);
-extern int acct_process(long exitcode);
+#if defined(__BYTE_ORDER) ? __BYTE_ORDER == __BIG_ENDIAN : defined(__BIG_ENDIAN)
+#define ACCT_BYTEORDER	0x80	/* accounting file is big endian */
+#elif defined(__BYTE_ORDER) ? __BYTE_ORDER == __LITTLE_ENDIAN : defined(__LITTLE_ENDIAN)
+#define ACCT_BYTEORDER	0x00	/* accounting file is little endian */
 #else
-#define acct_auto_close(x)	do { } while (0)
-#define acct_process(x)		do { } while (0)
+#error unspecified endianness
 #endif
 
-#endif	/* __KERNEL */
+#define ACCT_VERSION	2
+#define AHZ		(HZ)
 
-#endif	/* _LINUX_ACCT_H */
+
+#endif /* _LINUX_ACCT_H */

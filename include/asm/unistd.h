@@ -4,6 +4,10 @@
  * for more details.
  *
  * Copyright (C) 1995, 96, 97, 98, 99, 2000 by Ralf Baechle
+ * Copyright (C) 1999, 2000 Silicon Graphics, Inc.
+ *
+ * Changed system calls macros _syscall5 - _syscall7 to push args 5 to 7 onto
+ * the stack. Robin Farine for ACN S.A, Copyright (C) 1996 by ACN S.A
  */
 #ifndef _ASM_UNISTD_H
 #define _ASM_UNISTD_H
@@ -16,16 +20,16 @@
  * Linux o32 style syscalls are in the range from 4000 to 4999.
  */
 #define __NR_Linux			4000
-#define __NR_syscall			(__NR_Linux +   0)
-#define __NR_exit			(__NR_Linux +   1)
-#define __NR_fork			(__NR_Linux +   2)
-#define __NR_read			(__NR_Linux +   3)
-#define __NR_write			(__NR_Linux +   4)
-#define __NR_open			(__NR_Linux +   5)
-#define __NR_close			(__NR_Linux +   6)
-#define __NR_waitpid			(__NR_Linux +   7)
-#define __NR_creat			(__NR_Linux +   8)
-#define __NR_link			(__NR_Linux +   9)
+#define __NR_syscall			(__NR_Linux +	0)
+#define __NR_exit			(__NR_Linux +	1)
+#define __NR_fork			(__NR_Linux +	2)
+#define __NR_read			(__NR_Linux +	3)
+#define __NR_write			(__NR_Linux +	4)
+#define __NR_open			(__NR_Linux +	5)
+#define __NR_close			(__NR_Linux +	6)
+#define __NR_waitpid			(__NR_Linux +	7)
+#define __NR_creat			(__NR_Linux +	8)
+#define __NR_link			(__NR_Linux +	9)
 #define __NR_unlink			(__NR_Linux +  10)
 #define __NR_execve			(__NR_Linux +  11)
 #define __NR_chdir			(__NR_Linux +  12)
@@ -216,8 +220,8 @@
 #define __NR_rt_sigtimedwait		(__NR_Linux + 197)
 #define __NR_rt_sigqueueinfo		(__NR_Linux + 198)
 #define __NR_rt_sigsuspend		(__NR_Linux + 199)
-#define __NR_pread			(__NR_Linux + 200)
-#define __NR_pwrite			(__NR_Linux + 201)
+#define __NR_pread64			(__NR_Linux + 200)
+#define __NR_pwrite64			(__NR_Linux + 201)
 #define __NR_chown			(__NR_Linux + 202)
 #define __NR_getcwd			(__NR_Linux + 203)
 #define __NR_capget			(__NR_Linux + 204)
@@ -237,7 +241,7 @@
 #define __NR_madvise			(__NR_Linux + 218)
 #define __NR_getdents64			(__NR_Linux + 219)
 #define __NR_fcntl64			(__NR_Linux + 220)
-#define __NR_security			(__NR_Linux + 221)
+#define __NR_reserved221		(__NR_Linux + 221)
 #define __NR_gettid			(__NR_Linux + 222)
 #define __NR_readahead			(__NR_Linux + 223)
 #define __NR_setxattr			(__NR_Linux + 224)
@@ -257,16 +261,131 @@
 #define __NR_futex			(__NR_Linux + 238)
 #define __NR_sched_setaffinity		(__NR_Linux + 239)
 #define __NR_sched_getaffinity		(__NR_Linux + 240)
+#define __NR_io_setup			(__NR_Linux + 241)
+#define __NR_io_destroy			(__NR_Linux + 242)
+#define __NR_io_getevents		(__NR_Linux + 243)
+#define __NR_io_submit			(__NR_Linux + 244)
+#define __NR_io_cancel			(__NR_Linux + 245)
+#define __NR_exit_group			(__NR_Linux + 246)
+#define __NR_lookup_dcookie		(__NR_Linux + 247)
+#define __NR_epoll_create		(__NR_Linux + 248)
+#define __NR_epoll_ctl			(__NR_Linux + 249)
+#define __NR_epoll_wait			(__NR_Linux + 250)
+#define __NR_remap_file_pages		(__NR_Linux + 251)
+#define __NR_set_tid_address		(__NR_Linux + 252)
+#define __NR_restart_syscall		(__NR_Linux + 253)
+#define __NR_fadvise64			(__NR_Linux + 254)
+#define __NR_statfs64			(__NR_Linux + 255)
+#define __NR_fstatfs64			(__NR_Linux + 256)
+#define __NR_timer_create		(__NR_Linux + 257)
+#define __NR_timer_settime		(__NR_Linux + 258)
+#define __NR_timer_gettime		(__NR_Linux + 259)
+#define __NR_timer_getoverrun		(__NR_Linux + 260)
+#define __NR_timer_delete		(__NR_Linux + 261)
+#define __NR_clock_settime		(__NR_Linux + 262)
+#define __NR_clock_gettime		(__NR_Linux + 263)
+#define __NR_clock_getres		(__NR_Linux + 264)
+#define __NR_clock_nanosleep		(__NR_Linux + 265)
+#define __NR_tgkill			(__NR_Linux + 266)
+#define __NR_utimes			(__NR_Linux + 267)
+#define __NR_mbind			(__NR_Linux + 268)
+#define __NR_get_mempolicy		(__NR_Linux + 269)
+#define __NR_set_mempolicy		(__NR_Linux + 270)
+#define __NR_mq_open			(__NR_Linux + 271)
+#define __NR_mq_unlink			(__NR_Linux + 272)
+#define __NR_mq_timedsend		(__NR_Linux + 273)
+#define __NR_mq_timedreceive		(__NR_Linux + 274)
+#define __NR_mq_notify			(__NR_Linux + 275)
+#define __NR_mq_getsetattr		(__NR_Linux + 276)
+#define __NR_vserver			(__NR_Linux + 277)
+#define __NR_waitid			(__NR_Linux + 278)
+/* #define __NR_sys_setaltroot		(__NR_Linux + 279) */
+#define __NR_add_key			(__NR_Linux + 280)
+#define __NR_request_key		(__NR_Linux + 281)
+#define __NR_keyctl			(__NR_Linux + 282)
+#define __NR_set_thread_area		(__NR_Linux + 283)
+#define __NR_inotify_init		(__NR_Linux + 284)
+#define __NR_inotify_add_watch		(__NR_Linux + 285)
+#define __NR_inotify_rm_watch		(__NR_Linux + 286)
+#define __NR_migrate_pages		(__NR_Linux + 287)
+#define __NR_openat			(__NR_Linux + 288)
+#define __NR_mkdirat			(__NR_Linux + 289)
+#define __NR_mknodat			(__NR_Linux + 290)
+#define __NR_fchownat			(__NR_Linux + 291)
+#define __NR_futimesat			(__NR_Linux + 292)
+#define __NR_fstatat64			(__NR_Linux + 293)
+#define __NR_unlinkat			(__NR_Linux + 294)
+#define __NR_renameat			(__NR_Linux + 295)
+#define __NR_linkat			(__NR_Linux + 296)
+#define __NR_symlinkat			(__NR_Linux + 297)
+#define __NR_readlinkat			(__NR_Linux + 298)
+#define __NR_fchmodat			(__NR_Linux + 299)
+#define __NR_faccessat			(__NR_Linux + 300)
+#define __NR_pselect6			(__NR_Linux + 301)
+#define __NR_ppoll			(__NR_Linux + 302)
+#define __NR_unshare			(__NR_Linux + 303)
+#define __NR_splice			(__NR_Linux + 304)
+#define __NR_sync_file_range		(__NR_Linux + 305)
+#define __NR_tee			(__NR_Linux + 306)
+#define __NR_vmsplice			(__NR_Linux + 307)
+#define __NR_move_pages			(__NR_Linux + 308)
+#define __NR_set_robust_list		(__NR_Linux + 309)
+#define __NR_get_robust_list		(__NR_Linux + 310)
+#define __NR_kexec_load			(__NR_Linux + 311)
+#define __NR_getcpu			(__NR_Linux + 312)
+#define __NR_epoll_pwait		(__NR_Linux + 313)
+#define __NR_ioprio_set			(__NR_Linux + 314)
+#define __NR_ioprio_get			(__NR_Linux + 315)
+#define __NR_utimensat			(__NR_Linux + 316)
+#define __NR_signalfd			(__NR_Linux + 317)
+#define __NR_timerfd			(__NR_Linux + 318)
+#define __NR_eventfd			(__NR_Linux + 319)
+#define __NR_fallocate			(__NR_Linux + 320)
+#define __NR_timerfd_create		(__NR_Linux + 321)
+#define __NR_timerfd_gettime		(__NR_Linux + 322)
+#define __NR_timerfd_settime		(__NR_Linux + 323)
+#define __NR_signalfd4			(__NR_Linux + 324)
+#define __NR_eventfd2			(__NR_Linux + 325)
+#define __NR_epoll_create1		(__NR_Linux + 326)
+#define __NR_dup3			(__NR_Linux + 327)
+#define __NR_pipe2			(__NR_Linux + 328)
+#define __NR_inotify_init1		(__NR_Linux + 329)
+#define __NR_preadv			(__NR_Linux + 330)
+#define __NR_pwritev			(__NR_Linux + 331)
+#define __NR_rt_tgsigqueueinfo		(__NR_Linux + 332)
+#define __NR_perf_event_open		(__NR_Linux + 333)
+#define __NR_accept4			(__NR_Linux + 334)
+#define __NR_recvmmsg			(__NR_Linux + 335)
+#define __NR_fanotify_init		(__NR_Linux + 336)
+#define __NR_fanotify_mark		(__NR_Linux + 337)
+#define __NR_prlimit64			(__NR_Linux + 338)
+#define __NR_name_to_handle_at		(__NR_Linux + 339)
+#define __NR_open_by_handle_at		(__NR_Linux + 340)
+#define __NR_clock_adjtime		(__NR_Linux + 341)
+#define __NR_syncfs			(__NR_Linux + 342)
+#define __NR_sendmmsg			(__NR_Linux + 343)
+#define __NR_setns			(__NR_Linux + 344)
+#define __NR_process_vm_readv		(__NR_Linux + 345)
+#define __NR_process_vm_writev		(__NR_Linux + 346)
+#define __NR_kcmp			(__NR_Linux + 347)
+#define __NR_finit_module		(__NR_Linux + 348)
+#define __NR_sched_setattr		(__NR_Linux + 349)
+#define __NR_sched_getattr		(__NR_Linux + 350)
+#define __NR_renameat2			(__NR_Linux + 351)
+#define __NR_seccomp			(__NR_Linux + 352)
+#define __NR_getrandom			(__NR_Linux + 353)
+#define __NR_memfd_create		(__NR_Linux + 354)
+#define __NR_bpf			(__NR_Linux + 355)
 
 /*
  * Offset of the last Linux o32 flavoured syscall
  */
-#define __NR_Linux_syscalls		240
+#define __NR_Linux_syscalls		355
 
 #endif /* _MIPS_SIM == _MIPS_SIM_ABI32 */
 
 #define __NR_O32_Linux			4000
-#define __NR_O32_Linux_syscalls		240
+#define __NR_O32_Linux_syscalls		355
 
 #if _MIPS_SIM == _MIPS_SIM_ABI64
 
@@ -274,24 +393,24 @@
  * Linux 64-bit syscalls are in the range from 5000 to 5999.
  */
 #define __NR_Linux			5000
-#define __NR_read			(__NR_Linux +   0)
-#define __NR_write			(__NR_Linux +   1)
-#define __NR_open			(__NR_Linux +   2)
-#define __NR_close			(__NR_Linux +   3)
-#define __NR_stat			(__NR_Linux +   4)
-#define __NR_fstat			(__NR_Linux +   5)
-#define __NR_lstat			(__NR_Linux +   6)
-#define __NR_poll			(__NR_Linux +   7)
-#define __NR_lseek			(__NR_Linux +   8)
-#define __NR_mmap			(__NR_Linux +   9)
+#define __NR_read			(__NR_Linux +	0)
+#define __NR_write			(__NR_Linux +	1)
+#define __NR_open			(__NR_Linux +	2)
+#define __NR_close			(__NR_Linux +	3)
+#define __NR_stat			(__NR_Linux +	4)
+#define __NR_fstat			(__NR_Linux +	5)
+#define __NR_lstat			(__NR_Linux +	6)
+#define __NR_poll			(__NR_Linux +	7)
+#define __NR_lseek			(__NR_Linux +	8)
+#define __NR_mmap			(__NR_Linux +	9)
 #define __NR_mprotect			(__NR_Linux +  10)
 #define __NR_munmap			(__NR_Linux +  11)
 #define __NR_brk			(__NR_Linux +  12)
 #define __NR_rt_sigaction		(__NR_Linux +  13)
 #define __NR_rt_sigprocmask		(__NR_Linux +  14)
 #define __NR_ioctl			(__NR_Linux +  15)
-#define __NR_pread			(__NR_Linux +  16)
-#define __NR_pwrite			(__NR_Linux +  17)
+#define __NR_pread64			(__NR_Linux +  16)
+#define __NR_pwrite64			(__NR_Linux +  17)
 #define __NR_readv			(__NR_Linux +  18)
 #define __NR_writev			(__NR_Linux +  19)
 #define __NR_access			(__NR_Linux +  20)
@@ -451,7 +570,7 @@
 #define __NR_getpmsg			(__NR_Linux + 174)
 #define __NR_putpmsg			(__NR_Linux + 175)
 #define __NR_afs_syscall		(__NR_Linux + 176)
-#define __NR_security			(__NR_Linux + 177)
+#define __NR_reserved177		(__NR_Linux + 177)
 #define __NR_gettid			(__NR_Linux + 178)
 #define __NR_readahead			(__NR_Linux + 179)
 #define __NR_setxattr			(__NR_Linux + 180)
@@ -467,38 +586,139 @@
 #define __NR_lremovexattr		(__NR_Linux + 190)
 #define __NR_fremovexattr		(__NR_Linux + 191)
 #define __NR_tkill			(__NR_Linux + 192)
-#define __NR_unused193			(__NR_Linux + 193)
+#define __NR_reserved193		(__NR_Linux + 193)
 #define __NR_futex			(__NR_Linux + 194)
 #define __NR_sched_setaffinity		(__NR_Linux + 195)
 #define __NR_sched_getaffinity		(__NR_Linux + 196)
 #define __NR_cacheflush			(__NR_Linux + 197)
 #define __NR_cachectl			(__NR_Linux + 198)
 #define __NR_sysmips			(__NR_Linux + 199)
-#define __NR_unused200			(__NR_Linux + 200)
-#define __NR_unused201			(__NR_Linux + 201)
-#define __NR_unused202			(__NR_Linux + 202)
-#define __NR_unused203			(__NR_Linux + 203)
-#define __NR_unused204			(__NR_Linux + 204)
-#define __NR_unused205			(__NR_Linux + 205)
-#define __NR_unused206			(__NR_Linux + 206)
-#define __NR_unused207			(__NR_Linux + 207)
-#define __NR_unused208			(__NR_Linux + 208)
-#define __NR_unused209			(__NR_Linux + 209)
-#define __NR_unused210			(__NR_Linux + 210)
+#define __NR_io_setup			(__NR_Linux + 200)
+#define __NR_io_destroy			(__NR_Linux + 201)
+#define __NR_io_getevents		(__NR_Linux + 202)
+#define __NR_io_submit			(__NR_Linux + 203)
+#define __NR_io_cancel			(__NR_Linux + 204)
+#define __NR_exit_group			(__NR_Linux + 205)
+#define __NR_lookup_dcookie		(__NR_Linux + 206)
+#define __NR_epoll_create		(__NR_Linux + 207)
+#define __NR_epoll_ctl			(__NR_Linux + 208)
+#define __NR_epoll_wait			(__NR_Linux + 209)
+#define __NR_remap_file_pages		(__NR_Linux + 210)
 #define __NR_rt_sigreturn		(__NR_Linux + 211)
-#define __NR_unused212			(__NR_Linux + 212)
-#define __NR_unused213			(__NR_Linux + 213)
+#define __NR_set_tid_address		(__NR_Linux + 212)
+#define __NR_restart_syscall		(__NR_Linux + 213)
 #define __NR_semtimedop			(__NR_Linux + 214)
+#define __NR_fadvise64			(__NR_Linux + 215)
+#define __NR_timer_create		(__NR_Linux + 216)
+#define __NR_timer_settime		(__NR_Linux + 217)
+#define __NR_timer_gettime		(__NR_Linux + 218)
+#define __NR_timer_getoverrun		(__NR_Linux + 219)
+#define __NR_timer_delete		(__NR_Linux + 220)
+#define __NR_clock_settime		(__NR_Linux + 221)
+#define __NR_clock_gettime		(__NR_Linux + 222)
+#define __NR_clock_getres		(__NR_Linux + 223)
+#define __NR_clock_nanosleep		(__NR_Linux + 224)
+#define __NR_tgkill			(__NR_Linux + 225)
+#define __NR_utimes			(__NR_Linux + 226)
+#define __NR_mbind			(__NR_Linux + 227)
+#define __NR_get_mempolicy		(__NR_Linux + 228)
+#define __NR_set_mempolicy		(__NR_Linux + 229)
+#define __NR_mq_open			(__NR_Linux + 230)
+#define __NR_mq_unlink			(__NR_Linux + 231)
+#define __NR_mq_timedsend		(__NR_Linux + 232)
+#define __NR_mq_timedreceive		(__NR_Linux + 233)
+#define __NR_mq_notify			(__NR_Linux + 234)
+#define __NR_mq_getsetattr		(__NR_Linux + 235)
+#define __NR_vserver			(__NR_Linux + 236)
+#define __NR_waitid			(__NR_Linux + 237)
+/* #define __NR_sys_setaltroot		(__NR_Linux + 238) */
+#define __NR_add_key			(__NR_Linux + 239)
+#define __NR_request_key		(__NR_Linux + 240)
+#define __NR_keyctl			(__NR_Linux + 241)
+#define __NR_set_thread_area		(__NR_Linux + 242)
+#define __NR_inotify_init		(__NR_Linux + 243)
+#define __NR_inotify_add_watch		(__NR_Linux + 244)
+#define __NR_inotify_rm_watch		(__NR_Linux + 245)
+#define __NR_migrate_pages		(__NR_Linux + 246)
+#define __NR_openat			(__NR_Linux + 247)
+#define __NR_mkdirat			(__NR_Linux + 248)
+#define __NR_mknodat			(__NR_Linux + 249)
+#define __NR_fchownat			(__NR_Linux + 250)
+#define __NR_futimesat			(__NR_Linux + 251)
+#define __NR_newfstatat			(__NR_Linux + 252)
+#define __NR_unlinkat			(__NR_Linux + 253)
+#define __NR_renameat			(__NR_Linux + 254)
+#define __NR_linkat			(__NR_Linux + 255)
+#define __NR_symlinkat			(__NR_Linux + 256)
+#define __NR_readlinkat			(__NR_Linux + 257)
+#define __NR_fchmodat			(__NR_Linux + 258)
+#define __NR_faccessat			(__NR_Linux + 259)
+#define __NR_pselect6			(__NR_Linux + 260)
+#define __NR_ppoll			(__NR_Linux + 261)
+#define __NR_unshare			(__NR_Linux + 262)
+#define __NR_splice			(__NR_Linux + 263)
+#define __NR_sync_file_range		(__NR_Linux + 264)
+#define __NR_tee			(__NR_Linux + 265)
+#define __NR_vmsplice			(__NR_Linux + 266)
+#define __NR_move_pages			(__NR_Linux + 267)
+#define __NR_set_robust_list		(__NR_Linux + 268)
+#define __NR_get_robust_list		(__NR_Linux + 269)
+#define __NR_kexec_load			(__NR_Linux + 270)
+#define __NR_getcpu			(__NR_Linux + 271)
+#define __NR_epoll_pwait		(__NR_Linux + 272)
+#define __NR_ioprio_set			(__NR_Linux + 273)
+#define __NR_ioprio_get			(__NR_Linux + 274)
+#define __NR_utimensat			(__NR_Linux + 275)
+#define __NR_signalfd			(__NR_Linux + 276)
+#define __NR_timerfd			(__NR_Linux + 277)
+#define __NR_eventfd			(__NR_Linux + 278)
+#define __NR_fallocate			(__NR_Linux + 279)
+#define __NR_timerfd_create		(__NR_Linux + 280)
+#define __NR_timerfd_gettime		(__NR_Linux + 281)
+#define __NR_timerfd_settime		(__NR_Linux + 282)
+#define __NR_signalfd4			(__NR_Linux + 283)
+#define __NR_eventfd2			(__NR_Linux + 284)
+#define __NR_epoll_create1		(__NR_Linux + 285)
+#define __NR_dup3			(__NR_Linux + 286)
+#define __NR_pipe2			(__NR_Linux + 287)
+#define __NR_inotify_init1		(__NR_Linux + 288)
+#define __NR_preadv			(__NR_Linux + 289)
+#define __NR_pwritev			(__NR_Linux + 290)
+#define __NR_rt_tgsigqueueinfo		(__NR_Linux + 291)
+#define __NR_perf_event_open		(__NR_Linux + 292)
+#define __NR_accept4			(__NR_Linux + 293)
+#define __NR_recvmmsg			(__NR_Linux + 294)
+#define __NR_fanotify_init		(__NR_Linux + 295)
+#define __NR_fanotify_mark		(__NR_Linux + 296)
+#define __NR_prlimit64			(__NR_Linux + 297)
+#define __NR_name_to_handle_at		(__NR_Linux + 298)
+#define __NR_open_by_handle_at		(__NR_Linux + 299)
+#define __NR_clock_adjtime		(__NR_Linux + 300)
+#define __NR_syncfs			(__NR_Linux + 301)
+#define __NR_sendmmsg			(__NR_Linux + 302)
+#define __NR_setns			(__NR_Linux + 303)
+#define __NR_process_vm_readv		(__NR_Linux + 304)
+#define __NR_process_vm_writev		(__NR_Linux + 305)
+#define __NR_kcmp			(__NR_Linux + 306)
+#define __NR_finit_module		(__NR_Linux + 307)
+#define __NR_getdents64			(__NR_Linux + 308)
+#define __NR_sched_setattr		(__NR_Linux + 309)
+#define __NR_sched_getattr		(__NR_Linux + 310)
+#define __NR_renameat2			(__NR_Linux + 311)
+#define __NR_seccomp			(__NR_Linux + 312)
+#define __NR_getrandom			(__NR_Linux + 313)
+#define __NR_memfd_create		(__NR_Linux + 314)
+#define __NR_bpf			(__NR_Linux + 315)
 
 /*
  * Offset of the last Linux 64-bit flavoured syscall
  */
-#define __NR_Linux_syscalls		214
+#define __NR_Linux_syscalls		315
 
 #endif /* _MIPS_SIM == _MIPS_SIM_ABI64 */
 
 #define __NR_64_Linux			5000
-#define __NR_64_Linux_syscalls		214
+#define __NR_64_Linux_syscalls		315
 
 #if _MIPS_SIM == _MIPS_SIM_NABI32
 
@@ -506,24 +726,24 @@
  * Linux N32 syscalls are in the range from 6000 to 6999.
  */
 #define __NR_Linux			6000
-#define __NR_read			(__NR_Linux +   0)
-#define __NR_write			(__NR_Linux +   1)
-#define __NR_open			(__NR_Linux +   2)
-#define __NR_close			(__NR_Linux +   3)
-#define __NR_stat			(__NR_Linux +   4)
-#define __NR_fstat			(__NR_Linux +   5)
-#define __NR_lstat			(__NR_Linux +   6)
-#define __NR_poll			(__NR_Linux +   7)
-#define __NR_lseek			(__NR_Linux +   8)
-#define __NR_mmap			(__NR_Linux +   9)
+#define __NR_read			(__NR_Linux +	0)
+#define __NR_write			(__NR_Linux +	1)
+#define __NR_open			(__NR_Linux +	2)
+#define __NR_close			(__NR_Linux +	3)
+#define __NR_stat			(__NR_Linux +	4)
+#define __NR_fstat			(__NR_Linux +	5)
+#define __NR_lstat			(__NR_Linux +	6)
+#define __NR_poll			(__NR_Linux +	7)
+#define __NR_lseek			(__NR_Linux +	8)
+#define __NR_mmap			(__NR_Linux +	9)
 #define __NR_mprotect			(__NR_Linux +  10)
 #define __NR_munmap			(__NR_Linux +  11)
 #define __NR_brk			(__NR_Linux +  12)
 #define __NR_rt_sigaction		(__NR_Linux +  13)
 #define __NR_rt_sigprocmask		(__NR_Linux +  14)
 #define __NR_ioctl			(__NR_Linux +  15)
-#define __NR_pread			(__NR_Linux +  16)
-#define __NR_pwrite			(__NR_Linux +  17)
+#define __NR_pread64			(__NR_Linux +  16)
+#define __NR_pwrite64			(__NR_Linux +  17)
 #define __NR_readv			(__NR_Linux +  18)
 #define __NR_writev			(__NR_Linux +  19)
 #define __NR_access			(__NR_Linux +  20)
@@ -683,7 +903,7 @@
 #define __NR_getpmsg			(__NR_Linux + 174)
 #define __NR_putpmsg			(__NR_Linux + 175)
 #define __NR_afs_syscall		(__NR_Linux + 176)
-#define __NR_security			(__NR_Linux + 177)
+#define __NR_reserved177		(__NR_Linux + 177)
 #define __NR_gettid			(__NR_Linux + 178)
 #define __NR_readahead			(__NR_Linux + 179)
 #define __NR_setxattr			(__NR_Linux + 180)
@@ -699,346 +919,142 @@
 #define __NR_lremovexattr		(__NR_Linux + 190)
 #define __NR_fremovexattr		(__NR_Linux + 191)
 #define __NR_tkill			(__NR_Linux + 192)
-#define __NR_time			(__NR_Linux + 193)
+#define __NR_reserved193		(__NR_Linux + 193)
 #define __NR_futex			(__NR_Linux + 194)
 #define __NR_sched_setaffinity		(__NR_Linux + 195)
 #define __NR_sched_getaffinity		(__NR_Linux + 196)
 #define __NR_cacheflush			(__NR_Linux + 197)
 #define __NR_cachectl			(__NR_Linux + 198)
 #define __NR_sysmips			(__NR_Linux + 199)
-#define __NR_unused200			(__NR_Linux + 200)
-#define __NR_unused201			(__NR_Linux + 201)
-#define __NR_unused202			(__NR_Linux + 202)
-#define __NR_unused203			(__NR_Linux + 203)
-#define __NR_unused204			(__NR_Linux + 204)
-#define __NR_unused205			(__NR_Linux + 205)
-#define __NR_unused206			(__NR_Linux + 206)
-#define __NR_unused207			(__NR_Linux + 207)
-#define __NR_unused208			(__NR_Linux + 208)
-#define __NR_unused209			(__NR_Linux + 209)
-#define __NR_unused210			(__NR_Linux + 210)
+#define __NR_io_setup			(__NR_Linux + 200)
+#define __NR_io_destroy			(__NR_Linux + 201)
+#define __NR_io_getevents		(__NR_Linux + 202)
+#define __NR_io_submit			(__NR_Linux + 203)
+#define __NR_io_cancel			(__NR_Linux + 204)
+#define __NR_exit_group			(__NR_Linux + 205)
+#define __NR_lookup_dcookie		(__NR_Linux + 206)
+#define __NR_epoll_create		(__NR_Linux + 207)
+#define __NR_epoll_ctl			(__NR_Linux + 208)
+#define __NR_epoll_wait			(__NR_Linux + 209)
+#define __NR_remap_file_pages		(__NR_Linux + 210)
 #define __NR_rt_sigreturn		(__NR_Linux + 211)
 #define __NR_fcntl64			(__NR_Linux + 212)
-#define __NR_unused213			(__NR_Linux + 213)
-#define __NR_unused214			(__NR_Linux + 214)
+#define __NR_set_tid_address		(__NR_Linux + 213)
+#define __NR_restart_syscall		(__NR_Linux + 214)
 #define __NR_semtimedop			(__NR_Linux + 215)
-#define __NR_unused216			(__NR_Linux + 216)
-#define __NR_unused217			(__NR_Linux + 217)
-#define __NR_unused218			(__NR_Linux + 218)
+#define __NR_fadvise64			(__NR_Linux + 216)
+#define __NR_statfs64			(__NR_Linux + 217)
+#define __NR_fstatfs64			(__NR_Linux + 218)
 #define __NR_sendfile64			(__NR_Linux + 219)
+#define __NR_timer_create		(__NR_Linux + 220)
+#define __NR_timer_settime		(__NR_Linux + 221)
+#define __NR_timer_gettime		(__NR_Linux + 222)
+#define __NR_timer_getoverrun		(__NR_Linux + 223)
+#define __NR_timer_delete		(__NR_Linux + 224)
+#define __NR_clock_settime		(__NR_Linux + 225)
+#define __NR_clock_gettime		(__NR_Linux + 226)
+#define __NR_clock_getres		(__NR_Linux + 227)
+#define __NR_clock_nanosleep		(__NR_Linux + 228)
+#define __NR_tgkill			(__NR_Linux + 229)
+#define __NR_utimes			(__NR_Linux + 230)
+#define __NR_mbind			(__NR_Linux + 231)
+#define __NR_get_mempolicy		(__NR_Linux + 232)
+#define __NR_set_mempolicy		(__NR_Linux + 233)
+#define __NR_mq_open			(__NR_Linux + 234)
+#define __NR_mq_unlink			(__NR_Linux + 235)
+#define __NR_mq_timedsend		(__NR_Linux + 236)
+#define __NR_mq_timedreceive		(__NR_Linux + 237)
+#define __NR_mq_notify			(__NR_Linux + 238)
+#define __NR_mq_getsetattr		(__NR_Linux + 239)
+#define __NR_vserver			(__NR_Linux + 240)
+#define __NR_waitid			(__NR_Linux + 241)
+/* #define __NR_sys_setaltroot		(__NR_Linux + 242) */
+#define __NR_add_key			(__NR_Linux + 243)
+#define __NR_request_key		(__NR_Linux + 244)
+#define __NR_keyctl			(__NR_Linux + 245)
+#define __NR_set_thread_area		(__NR_Linux + 246)
+#define __NR_inotify_init		(__NR_Linux + 247)
+#define __NR_inotify_add_watch		(__NR_Linux + 248)
+#define __NR_inotify_rm_watch		(__NR_Linux + 249)
+#define __NR_migrate_pages		(__NR_Linux + 250)
+#define __NR_openat			(__NR_Linux + 251)
+#define __NR_mkdirat			(__NR_Linux + 252)
+#define __NR_mknodat			(__NR_Linux + 253)
+#define __NR_fchownat			(__NR_Linux + 254)
+#define __NR_futimesat			(__NR_Linux + 255)
+#define __NR_newfstatat			(__NR_Linux + 256)
+#define __NR_unlinkat			(__NR_Linux + 257)
+#define __NR_renameat			(__NR_Linux + 258)
+#define __NR_linkat			(__NR_Linux + 259)
+#define __NR_symlinkat			(__NR_Linux + 260)
+#define __NR_readlinkat			(__NR_Linux + 261)
+#define __NR_fchmodat			(__NR_Linux + 262)
+#define __NR_faccessat			(__NR_Linux + 263)
+#define __NR_pselect6			(__NR_Linux + 264)
+#define __NR_ppoll			(__NR_Linux + 265)
+#define __NR_unshare			(__NR_Linux + 266)
+#define __NR_splice			(__NR_Linux + 267)
+#define __NR_sync_file_range		(__NR_Linux + 268)
+#define __NR_tee			(__NR_Linux + 269)
+#define __NR_vmsplice			(__NR_Linux + 270)
+#define __NR_move_pages			(__NR_Linux + 271)
+#define __NR_set_robust_list		(__NR_Linux + 272)
+#define __NR_get_robust_list		(__NR_Linux + 273)
+#define __NR_kexec_load			(__NR_Linux + 274)
+#define __NR_getcpu			(__NR_Linux + 275)
+#define __NR_epoll_pwait		(__NR_Linux + 276)
+#define __NR_ioprio_set			(__NR_Linux + 277)
+#define __NR_ioprio_get			(__NR_Linux + 278)
+#define __NR_utimensat			(__NR_Linux + 279)
+#define __NR_signalfd			(__NR_Linux + 280)
+#define __NR_timerfd			(__NR_Linux + 281)
+#define __NR_eventfd			(__NR_Linux + 282)
+#define __NR_fallocate			(__NR_Linux + 283)
+#define __NR_timerfd_create		(__NR_Linux + 284)
+#define __NR_timerfd_gettime		(__NR_Linux + 285)
+#define __NR_timerfd_settime		(__NR_Linux + 286)
+#define __NR_signalfd4			(__NR_Linux + 287)
+#define __NR_eventfd2			(__NR_Linux + 288)
+#define __NR_epoll_create1		(__NR_Linux + 289)
+#define __NR_dup3			(__NR_Linux + 290)
+#define __NR_pipe2			(__NR_Linux + 291)
+#define __NR_inotify_init1		(__NR_Linux + 292)
+#define __NR_preadv			(__NR_Linux + 293)
+#define __NR_pwritev			(__NR_Linux + 294)
+#define __NR_rt_tgsigqueueinfo		(__NR_Linux + 295)
+#define __NR_perf_event_open		(__NR_Linux + 296)
+#define __NR_accept4			(__NR_Linux + 297)
+#define __NR_recvmmsg			(__NR_Linux + 298)
+#define __NR_getdents64			(__NR_Linux + 299)
+#define __NR_fanotify_init		(__NR_Linux + 300)
+#define __NR_fanotify_mark		(__NR_Linux + 301)
+#define __NR_prlimit64			(__NR_Linux + 302)
+#define __NR_name_to_handle_at		(__NR_Linux + 303)
+#define __NR_open_by_handle_at		(__NR_Linux + 304)
+#define __NR_clock_adjtime		(__NR_Linux + 305)
+#define __NR_syncfs			(__NR_Linux + 306)
+#define __NR_sendmmsg			(__NR_Linux + 307)
+#define __NR_setns			(__NR_Linux + 308)
+#define __NR_process_vm_readv		(__NR_Linux + 309)
+#define __NR_process_vm_writev		(__NR_Linux + 310)
+#define __NR_kcmp			(__NR_Linux + 311)
+#define __NR_finit_module		(__NR_Linux + 312)
+#define __NR_sched_setattr		(__NR_Linux + 313)
+#define __NR_sched_getattr		(__NR_Linux + 314)
+#define __NR_renameat2			(__NR_Linux + 315)
+#define __NR_seccomp			(__NR_Linux + 316)
+#define __NR_getrandom			(__NR_Linux + 317)
+#define __NR_memfd_create		(__NR_Linux + 318)
+#define __NR_bpf			(__NR_Linux + 319)
 
 /*
  * Offset of the last N32 flavoured syscall
  */
-#define __NR_Linux_syscalls		219
+#define __NR_Linux_syscalls		319
 
 #endif /* _MIPS_SIM == _MIPS_SIM_NABI32 */
 
 #define __NR_N32_Linux			6000
-#define __NR_N32_Linux_syscalls		219
-
-#ifndef __ASSEMBLY__
-
-/* XXX - _foo needs to be __foo, while __NR_bar could be _NR_bar. */
-#define _syscall0(type,name) \
-type name(void) \
-{ \
-	register unsigned long __a3 asm("$7"); \
-	unsigned long __v0; \
-	\
-	__asm__ volatile ( \
-	".set\tnoreorder\n\t" \
-	"li\t$2, %2\t\t\t# " #name "\n\t" \
-	"syscall\n\t" \
-	"move\t%0, $2\n\t" \
-	".set\treorder" \
-	: "=&r" (__v0), "=r" (__a3) \
-	: "i" (__NR_##name) \
-	: "$2", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", \
-	  "memory"); \
-	\
-	if (__a3 == 0) \
-		return (type) __v0; \
-	errno = __v0; \
-	return -1; \
-}
-
-/*
- * DANGER: This macro isn't usable for the pipe(2) call
- * which has a unusual return convention.
- */
-#define _syscall1(type,name,atype,a) \
-type name(atype a) \
-{ \
-	register unsigned long __a0 asm("$4") = (unsigned long) a; \
-	register unsigned long __a3 asm("$7"); \
-	unsigned long __v0; \
-	\
-	__asm__ volatile ( \
-	".set\tnoreorder\n\t" \
-	"li\t$2, %3\t\t\t# " #name "\n\t" \
-	"syscall\n\t" \
-	"move\t%0, $2\n\t" \
-	".set\treorder" \
-	: "=&r" (__v0), "=r" (__a3) \
-	: "r" (__a0), "i" (__NR_##name) \
-	: "$2", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", \
-	  "memory"); \
-	\
-	if (__a3 == 0) \
-		return (type) __v0; \
-	errno = __v0; \
-	return -1; \
-}
-
-#define _syscall2(type,name,atype,a,btype,b) \
-type name(atype a, btype b) \
-{ \
-	register unsigned long __a0 asm("$4") = (unsigned long) a; \
-	register unsigned long __a1 asm("$5") = (unsigned long) b; \
-	register unsigned long __a3 asm("$7"); \
-	unsigned long __v0; \
-	\
-	__asm__ volatile ( \
-	".set\tnoreorder\n\t" \
-	"li\t$2, %4\t\t\t# " #name "\n\t" \
-	"syscall\n\t" \
-	"move\t%0, $2\n\t" \
-	".set\treorder" \
-	: "=&r" (__v0), "=r" (__a3) \
-	: "r" (__a0), "r" (__a1), "i" (__NR_##name) \
-	: "$2", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", \
-	  "memory"); \
-	\
-	if (__a3 == 0) \
-		return (type) __v0; \
-	errno = __v0; \
-	return -1; \
-}
-
-#define _syscall3(type,name,atype,a,btype,b,ctype,c) \
-type name(atype a, btype b, ctype c) \
-{ \
-	register unsigned long __a0 asm("$4") = (unsigned long) a; \
-	register unsigned long __a1 asm("$5") = (unsigned long) b; \
-	register unsigned long __a2 asm("$6") = (unsigned long) c; \
-	register unsigned long __a3 asm("$7"); \
-	unsigned long __v0; \
-	\
-	__asm__ volatile ( \
-	".set\tnoreorder\n\t" \
-	"li\t$2, %5\t\t\t# " #name "\n\t" \
-	"syscall\n\t" \
-	"move\t%0, $2\n\t" \
-	".set\treorder" \
-	: "=&r" (__v0), "=r" (__a3) \
-	: "r" (__a0), "r" (__a1), "r" (__a2), "i" (__NR_##name) \
-	: "$2", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", \
-	  "memory"); \
-	\
-	if (__a3 == 0) \
-		return (type) __v0; \
-	errno = __v0; \
-	return -1; \
-}
-
-#define _syscall4(type,name,atype,a,btype,b,ctype,c,dtype,d) \
-type name(atype a, btype b, ctype c, dtype d) \
-{ \
-	register unsigned long __a0 asm("$4") = (unsigned long) a; \
-	register unsigned long __a1 asm("$5") = (unsigned long) b; \
-	register unsigned long __a2 asm("$6") = (unsigned long) c; \
-	register unsigned long __a3 asm("$7") = (unsigned long) d; \
-	unsigned long __v0; \
-	\
-	__asm__ volatile ( \
-	".set\tnoreorder\n\t" \
-	"li\t$2, %5\t\t\t# " #name "\n\t" \
-	"syscall\n\t" \
-	"move\t%0, $2\n\t" \
-	".set\treorder" \
-	: "=&r" (__v0), "+r" (__a3) \
-	: "r" (__a0), "r" (__a1), "r" (__a2), "i" (__NR_##name) \
-	: "$2", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", \
-	  "memory"); \
-	\
-	if (__a3 == 0) \
-		return (type) __v0; \
-	errno = __v0; \
-	return -1; \
-}
-
-#if (_MIPS_SIM == _MIPS_SIM_ABI32)
-
-/*
- * Using those means your brain needs more than an oil change ;-)
- */
-
-#define _syscall5(type,name,atype,a,btype,b,ctype,c,dtype,d,etype,e) \
-type name(atype a, btype b, ctype c, dtype d, etype e) \
-{ \
-	register unsigned long __a0 asm("$4") = (unsigned long) a; \
-	register unsigned long __a1 asm("$5") = (unsigned long) b; \
-	register unsigned long __a2 asm("$6") = (unsigned long) c; \
-	register unsigned long __a3 asm("$7") = (unsigned long) d; \
-	unsigned long __v0; \
-	\
-	__asm__ volatile ( \
-	".set\tnoreorder\n\t" \
-	"lw\t$2, %6\n\t" \
-	"subu\t$29, 32\n\t" \
-	"sw\t$2, 16($29)\n\t" \
-	"li\t$2, %5\t\t\t# " #name "\n\t" \
-	"syscall\n\t" \
-	"move\t%0, $2\n\t" \
-	"addiu\t$29, 32\n\t" \
-	".set\treorder" \
-	: "=&r" (__v0), "+r" (__a3) \
-	: "r" (__a0), "r" (__a1), "r" (__a2), "i" (__NR_##name), \
-	  "m" ((unsigned long)e) \
-	: "$2", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", \
-	  "memory"); \
-	\
-	if (__a3 == 0) \
-		return (type) __v0; \
-	errno = __v0; \
-	return -1; \
-}
-
-#define _syscall6(type,name,atype,a,btype,b,ctype,c,dtype,d,etype,e,ftype,f) \
-type name(atype a, btype b, ctype c, dtype d, etype e, ftype f) \
-{ \
-	register unsigned long __a0 asm("$4") = (unsigned long) a; \
-	register unsigned long __a1 asm("$5") = (unsigned long) b; \
-	register unsigned long __a2 asm("$6") = (unsigned long) c; \
-	register unsigned long __a3 asm("$7") = (unsigned long) d; \
-	unsigned long __v0; \
-	\
-	__asm__ volatile ( \
-	".set\tnoreorder\n\t" \
-	"lw\t$2, %6\n\t" \
-	"lw\t$8, %7\n\t" \
-	"subu\t$29, 32\n\t" \
-	"sw\t$2, 16($29)\n\t" \
-	"sw\t$8, 20($29)\n\t" \
-	"li\t$2, %5\t\t\t# " #name "\n\t" \
-	"syscall\n\t" \
-	"move\t%0, $2\n\t" \
-	"addiu\t$29, 32\n\t" \
-	".set\treorder" \
-	: "=&r" (__v0), "+r" (__a3) \
-	: "r" (__a0), "r" (__a1), "r" (__a2), "i" (__NR_##name), \
-	  "m" ((unsigned long)e), "m" ((unsigned long)f) \
-	: "$2", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", \
-	  "memory"); \
-	\
-	if (__a3 == 0) \
-		return (type) __v0; \
-	errno = __v0; \
-	return -1; \
-}
-
-#endif /* (_MIPS_SIM == _MIPS_SIM_ABI32) */
-
-#if (_MIPS_SIM == _MIPS_SIM_NABI32) || (_MIPS_SIM == _MIPS_SIM_ABI64)
-
-#define _syscall5(type,name,atype,a,btype,b,ctype,c,dtype,d,etype,e) \
-type name (atype a,btype b,ctype c,dtype d,etype e) \
-{ \
-	register unsigned long __a0 asm("$4") = (unsigned long) a; \
-	register unsigned long __a1 asm("$5") = (unsigned long) b; \
-	register unsigned long __a2 asm("$6") = (unsigned long) c; \
-	register unsigned long __a3 asm("$7") = (unsigned long) d; \
-	register unsigned long __a4 asm("$8") = (unsigned long) e; \
-	unsigned long __v0; \
-	\
-	__asm__ volatile ( \
-	".set\tnoreorder\n\t" \
-	"li\t$2, %6\t\t\t# " #name "\n\t" \
-	"syscall\n\t" \
-	"move\t%0, $2\n\t" \
-	".set\treorder" \
-	: "=&r" (__v0), "+r" (__a3) \
-	: "r" (__a0), "r" (__a1), "r" (__a2), "r" (__a4), "i" (__NR_##name) \
-	: "$2", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", \
-	  "memory"); \
-	\
-	if (__a3 == 0) \
-		return (type) __v0; \
-	errno = __v0; \
-	return -1; \
-}
-
-#define _syscall6(type,name,atype,a,btype,b,ctype,c,dtype,d,etype,e,ftype,f) \
-type name (atype a,btype b,ctype c,dtype d,etype e,ftype f) \
-{ \
-	register unsigned long __a0 asm("$4") = (unsigned long) a; \
-	register unsigned long __a1 asm("$5") = (unsigned long) b; \
-	register unsigned long __a2 asm("$6") = (unsigned long) c; \
-	register unsigned long __a3 asm("$7") = (unsigned long) d; \
-	register unsigned long __a4 asm("$8") = (unsigned long) e; \
-	register unsigned long __a5 asm("$9") = (unsigned long) f; \
-	unsigned long __v0; \
-	\
-	__asm__ volatile ( \
-	".set\tnoreorder\n\t" \
-	"li\t$2, %7\t\t\t# " #name "\n\t" \
-	"syscall\n\t" \
-	"move\t%0, $2\n\t" \
-	".set\treorder" \
-	: "=&r" (__v0), "+r" (__a3) \
-	: "r" (__a0), "r" (__a1), "r" (__a2), "r" (__a4), "r" (__a5), \
-	  "i" (__NR_##name) \
-	: "$2", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", \
-	  "memory"); \
-	\
-	if (__a3 == 0) \
-		return (type) __v0; \
-	errno = __v0; \
-	return -1; \
-}
-
-#endif /* (_MIPS_SIM == _MIPS_SIM_NABI32) || (_MIPS_SIM == _MIPS_SIM_ABI64) */
-
-#ifdef __KERNEL_SYSCALLS__
-
-/*
- * we need this inline - forking from kernel space will result
- * in NO COPY ON WRITE (!!!), until an execve is executed. This
- * is no problem, but for the stack. This is handled by not letting
- * main() use the stack at all after fork(). Thus, no function
- * calls - which means inline code for fork too, as otherwise we
- * would use the stack upon exit from 'fork()'.
- *
- * Actually only pause and fork are needed inline, so that there
- * won't be any messing with the stack from main(), but we define
- * some others too.
- */
-#define __NR__exit __NR_exit
-static inline _syscall0(int,sync)
-static inline _syscall0(pid_t,setsid)
-static inline _syscall3(int,write,int,fd,const char *,buf,off_t,count)
-static inline _syscall3(int,read,int,fd,char *,buf,off_t,count)
-static inline _syscall3(off_t,lseek,int,fd,off_t,offset,int,count)
-static inline _syscall1(int,dup,int,fd)
-static inline _syscall3(int,execve,const char *,file,char **,argv,char **,envp)
-static inline _syscall3(int,open,const char *,file,int,flag,int,mode)
-static inline _syscall1(int,close,int,fd)
-static inline _syscall1(void,_exit,int,exitcode)
-static inline _syscall4(pid_t,wait4,pid_t,pid,int *,stat_addr,int,options,struct rusage *,ru)
-static inline _syscall1(int,delete_module,const char *,name)
-
-static inline pid_t waitpid(int pid, int * wait_stat, int flags)
-{
-	return wait4(pid, wait_stat, flags, NULL);
-}
-
-static inline pid_t wait(int * wait_stat)
-{
-	return waitpid(-1, wait_stat, 0);
-}
-
-#endif /* __KERNEL_SYSCALLS__ */
-#endif /* !__ASSEMBLY__ */
+#define __NR_N32_Linux_syscalls		319
 
 #endif /* _ASM_UNISTD_H */

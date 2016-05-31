@@ -1,8 +1,9 @@
 #ifndef _LINUX_ERRQUEUE_H
-#define _LINUX_ERRQUEUE_H 1
+#define _LINUX_ERRQUEUE_H
 
-struct sock_extended_err
-{
+#include <linux/types.h>
+
+struct sock_extended_err {
 	__u32	ee_errno;	
 	__u8	ee_origin;
 	__u8	ee_type;
@@ -16,28 +17,30 @@ struct sock_extended_err
 #define SO_EE_ORIGIN_LOCAL	1
 #define SO_EE_ORIGIN_ICMP	2
 #define SO_EE_ORIGIN_ICMP6	3
+#define SO_EE_ORIGIN_TXSTATUS	4
+#define SO_EE_ORIGIN_TIMESTAMPING SO_EE_ORIGIN_TXSTATUS
 
 #define SO_EE_OFFENDER(ee)	((struct sockaddr*)((ee)+1))
 
-#ifdef __KERNEL__
-
-#include <linux/config.h>
-
-#define SKB_EXT_ERR(skb) ((struct sock_exterr_skb *) ((skb)->cb))
-
-struct sock_exterr_skb
-{
-	union {
-		struct inet_skb_parm	h4;
-#if defined(CONFIG_IPV6) || defined (CONFIG_IPV6_MODULE)
-		struct inet6_skb_parm	h6;
-#endif
-	} header;
-	struct sock_extended_err	ee;
-	u16				addr_offset;
-	u16				port;
+/**
+ *	struct scm_timestamping - timestamps exposed through cmsg
+ *
+ *	The timestamping interfaces SO_TIMESTAMPING, MSG_TSTAMP_*
+ *	communicate network timestamps by passing this struct in a cmsg with
+ *	recvmsg(). See Documentation/networking/timestamping.txt for details.
+ */
+struct scm_timestamping {
+	struct timespec ts[3];
 };
 
-#endif
+/* The type of scm_timestamping, passed in sock_extended_err ee_info.
+ * This defines the type of ts[0]. For SCM_TSTAMP_SND only, if ts[0]
+ * is zero, then this is a hardware timestamp and recorded in ts[2].
+ */
+enum {
+	SCM_TSTAMP_SND,		/* driver passed skb to NIC, or HW */
+	SCM_TSTAMP_SCHED,	/* data entered the packet scheduler */
+	SCM_TSTAMP_ACK,		/* data acknowledged by peer */
+};
 
-#endif
+#endif /* _LINUX_ERRQUEUE_H */

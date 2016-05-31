@@ -7,8 +7,8 @@
  *
  * Copyright (C) 1995 by Ralf Baechle
  */
-#ifndef __ASM_MIPS_SYSMIPS_H
-#define __ASM_MIPS_SYSMIPS_H
+#ifndef _ASM_SYSMIPS_H
+#define _ASM_SYSMIPS_H
 
 /*
  * Commands for the sysmips(2) call
@@ -16,10 +16,10 @@
  * sysmips(2) is deprecated - though some existing software uses it.
  * We only support the following commands.
  */
-#define SETNAME                    1	/* set hostname                  */
+#define SETNAME			   1	/* set hostname			 */
 #define FLUSH_CACHE		   3	/* writeback and invalidate caches */
-#define MIPS_FIXADE                7	/* control address error fixing  */
-#define MIPS_RDNVRAM              10	/* read NVRAM */
-#define MIPS_ATOMIC_SET		2001	/* atomically set variable       */
+#define MIPS_FIXADE		   7	/* control address error fixing	 */
+#define MIPS_RDNVRAM		  10	/* read NVRAM */
+#define MIPS_ATOMIC_SET		2001	/* atomically set variable	 */
 
-#endif /* __ASM_MIPS_SYSMIPS_H */
+#endif /* _ASM_SYSMIPS_H */

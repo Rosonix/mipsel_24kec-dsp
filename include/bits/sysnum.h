@@ -610,12 +610,12 @@
 #undef __NR_rt_sigsuspend
 #define __NR_rt_sigsuspend (4000 + 199)
 #define SYS_rt_sigsuspend __NR_rt_sigsuspend
-#undef __NR_pread
-#define __NR_pread (4000 + 200)
-#define SYS_pread __NR_pread
-#undef __NR_pwrite
-#define __NR_pwrite (4000 + 201)
-#define SYS_pwrite __NR_pwrite
+#undef __NR_pread64
+#define __NR_pread64 (4000 + 200)
+#define SYS_pread64 __NR_pread64
+#undef __NR_pwrite64
+#define __NR_pwrite64 (4000 + 201)
+#define SYS_pwrite64 __NR_pwrite64
 #undef __NR_chown
 #define __NR_chown (4000 + 202)
 #define SYS_chown __NR_chown
@@ -673,9 +673,9 @@
 #undef __NR_fcntl64
 #define __NR_fcntl64 (4000 + 220)
 #define SYS_fcntl64 __NR_fcntl64
-#undef __NR_security
-#define __NR_security (4000 + 221)
-#define SYS_security __NR_security
+#undef __NR_reserved221
+#define __NR_reserved221 (4000 + 221)
+#define SYS_reserved221 __NR_reserved221
 #undef __NR_gettid
 #define __NR_gettid (4000 + 222)
 #define SYS_gettid __NR_gettid
@@ -733,26 +733,368 @@
 #undef __NR_sched_getaffinity
 #define __NR_sched_getaffinity (4000 + 240)
 #define SYS_sched_getaffinity __NR_sched_getaffinity
+#undef __NR_io_setup
+#define __NR_io_setup (4000 + 241)
+#define SYS_io_setup __NR_io_setup
+#undef __NR_io_destroy
+#define __NR_io_destroy (4000 + 242)
+#define SYS_io_destroy __NR_io_destroy
+#undef __NR_io_getevents
+#define __NR_io_getevents (4000 + 243)
+#define SYS_io_getevents __NR_io_getevents
+#undef __NR_io_submit
+#define __NR_io_submit (4000 + 244)
+#define SYS_io_submit __NR_io_submit
+#undef __NR_io_cancel
+#define __NR_io_cancel (4000 + 245)
+#define SYS_io_cancel __NR_io_cancel
+#undef __NR_exit_group
+#define __NR_exit_group (4000 + 246)
+#define SYS_exit_group __NR_exit_group
+#undef __NR_lookup_dcookie
+#define __NR_lookup_dcookie (4000 + 247)
+#define SYS_lookup_dcookie __NR_lookup_dcookie
+#undef __NR_epoll_create
+#define __NR_epoll_create (4000 + 248)
+#define SYS_epoll_create __NR_epoll_create
+#undef __NR_epoll_ctl
+#define __NR_epoll_ctl (4000 + 249)
+#define SYS_epoll_ctl __NR_epoll_ctl
+#undef __NR_epoll_wait
+#define __NR_epoll_wait (4000 + 250)
+#define SYS_epoll_wait __NR_epoll_wait
+#undef __NR_remap_file_pages
+#define __NR_remap_file_pages (4000 + 251)
+#define SYS_remap_file_pages __NR_remap_file_pages
+#undef __NR_set_tid_address
+#define __NR_set_tid_address (4000 + 252)
+#define SYS_set_tid_address __NR_set_tid_address
+#undef __NR_restart_syscall
+#define __NR_restart_syscall (4000 + 253)
+#define SYS_restart_syscall __NR_restart_syscall
+#undef __NR_fadvise64
+#define __NR_fadvise64 (4000 + 254)
+#define SYS_fadvise64 __NR_fadvise64
+#undef __NR_statfs64
+#define __NR_statfs64 (4000 + 255)
+#define SYS_statfs64 __NR_statfs64
+#undef __NR_fstatfs64
+#define __NR_fstatfs64 (4000 + 256)
+#define SYS_fstatfs64 __NR_fstatfs64
+#undef __NR_timer_create
+#define __NR_timer_create (4000 + 257)
+#define SYS_timer_create __NR_timer_create
+#undef __NR_timer_settime
+#define __NR_timer_settime (4000 + 258)
+#define SYS_timer_settime __NR_timer_settime
+#undef __NR_timer_gettime
+#define __NR_timer_gettime (4000 + 259)
+#define SYS_timer_gettime __NR_timer_gettime
+#undef __NR_timer_getoverrun
+#define __NR_timer_getoverrun (4000 + 260)
+#define SYS_timer_getoverrun __NR_timer_getoverrun
+#undef __NR_timer_delete
+#define __NR_timer_delete (4000 + 261)
+#define SYS_timer_delete __NR_timer_delete
+#undef __NR_clock_settime
+#define __NR_clock_settime (4000 + 262)
+#define SYS_clock_settime __NR_clock_settime
+#undef __NR_clock_gettime
+#define __NR_clock_gettime (4000 + 263)
+#define SYS_clock_gettime __NR_clock_gettime
+#undef __NR_clock_getres
+#define __NR_clock_getres (4000 + 264)
+#define SYS_clock_getres __NR_clock_getres
+#undef __NR_clock_nanosleep
+#define __NR_clock_nanosleep (4000 + 265)
+#define SYS_clock_nanosleep __NR_clock_nanosleep
+#undef __NR_tgkill
+#define __NR_tgkill (4000 + 266)
+#define SYS_tgkill __NR_tgkill
+#undef __NR_utimes
+#define __NR_utimes (4000 + 267)
+#define SYS_utimes __NR_utimes
+#undef __NR_mbind
+#define __NR_mbind (4000 + 268)
+#define SYS_mbind __NR_mbind
+#undef __NR_get_mempolicy
+#define __NR_get_mempolicy (4000 + 269)
+#define SYS_get_mempolicy __NR_get_mempolicy
+#undef __NR_set_mempolicy
+#define __NR_set_mempolicy (4000 + 270)
+#define SYS_set_mempolicy __NR_set_mempolicy
+#undef __NR_mq_open
+#define __NR_mq_open (4000 + 271)
+#define SYS_mq_open __NR_mq_open
+#undef __NR_mq_unlink
+#define __NR_mq_unlink (4000 + 272)
+#define SYS_mq_unlink __NR_mq_unlink
+#undef __NR_mq_timedsend
+#define __NR_mq_timedsend (4000 + 273)
+#define SYS_mq_timedsend __NR_mq_timedsend
+#undef __NR_mq_timedreceive
+#define __NR_mq_timedreceive (4000 + 274)
+#define SYS_mq_timedreceive __NR_mq_timedreceive
+#undef __NR_mq_notify
+#define __NR_mq_notify (4000 + 275)
+#define SYS_mq_notify __NR_mq_notify
+#undef __NR_mq_getsetattr
+#define __NR_mq_getsetattr (4000 + 276)
+#define SYS_mq_getsetattr __NR_mq_getsetattr
+#undef __NR_vserver
+#define __NR_vserver (4000 + 277)
+#define SYS_vserver __NR_vserver
+#undef __NR_waitid
+#define __NR_waitid (4000 + 278)
+#define SYS_waitid __NR_waitid
+#undef __NR_add_key
+#define __NR_add_key (4000 + 280)
+#define SYS_add_key __NR_add_key
+#undef __NR_request_key
+#define __NR_request_key (4000 + 281)
+#define SYS_request_key __NR_request_key
+#undef __NR_keyctl
+#define __NR_keyctl (4000 + 282)
+#define SYS_keyctl __NR_keyctl
+#undef __NR_set_thread_area
+#define __NR_set_thread_area (4000 + 283)
+#define SYS_set_thread_area __NR_set_thread_area
+#undef __NR_inotify_init
+#define __NR_inotify_init (4000 + 284)
+#define SYS_inotify_init __NR_inotify_init
+#undef __NR_inotify_add_watch
+#define __NR_inotify_add_watch (4000 + 285)
+#define SYS_inotify_add_watch __NR_inotify_add_watch
+#undef __NR_inotify_rm_watch
+#define __NR_inotify_rm_watch (4000 + 286)
+#define SYS_inotify_rm_watch __NR_inotify_rm_watch
+#undef __NR_migrate_pages
+#define __NR_migrate_pages (4000 + 287)
+#define SYS_migrate_pages __NR_migrate_pages
+#undef __NR_openat
+#define __NR_openat (4000 + 288)
+#define SYS_openat __NR_openat
+#undef __NR_mkdirat
+#define __NR_mkdirat (4000 + 289)
+#define SYS_mkdirat __NR_mkdirat
+#undef __NR_mknodat
+#define __NR_mknodat (4000 + 290)
+#define SYS_mknodat __NR_mknodat
+#undef __NR_fchownat
+#define __NR_fchownat (4000 + 291)
+#define SYS_fchownat __NR_fchownat
+#undef __NR_futimesat
+#define __NR_futimesat (4000 + 292)
+#define SYS_futimesat __NR_futimesat
+#undef __NR_fstatat64
+#define __NR_fstatat64 (4000 + 293)
+#define SYS_fstatat64 __NR_fstatat64
+#undef __NR_unlinkat
+#define __NR_unlinkat (4000 + 294)
+#define SYS_unlinkat __NR_unlinkat
+#undef __NR_renameat
+#define __NR_renameat (4000 + 295)
+#define SYS_renameat __NR_renameat
+#undef __NR_linkat
+#define __NR_linkat (4000 + 296)
+#define SYS_linkat __NR_linkat
+#undef __NR_symlinkat
+#define __NR_symlinkat (4000 + 297)
+#define SYS_symlinkat __NR_symlinkat
+#undef __NR_readlinkat
+#define __NR_readlinkat (4000 + 298)
+#define SYS_readlinkat __NR_readlinkat
+#undef __NR_fchmodat
+#define __NR_fchmodat (4000 + 299)
+#define SYS_fchmodat __NR_fchmodat
+#undef __NR_faccessat
+#define __NR_faccessat (4000 + 300)
+#define SYS_faccessat __NR_faccessat
+#undef __NR_pselect6
+#define __NR_pselect6 (4000 + 301)
+#define SYS_pselect6 __NR_pselect6
+#undef __NR_ppoll
+#define __NR_ppoll (4000 + 302)
+#define SYS_ppoll __NR_ppoll
+#undef __NR_unshare
+#define __NR_unshare (4000 + 303)
+#define SYS_unshare __NR_unshare
+#undef __NR_splice
+#define __NR_splice (4000 + 304)
+#define SYS_splice __NR_splice
+#undef __NR_sync_file_range
+#define __NR_sync_file_range (4000 + 305)
+#define SYS_sync_file_range __NR_sync_file_range
+#undef __NR_tee
+#define __NR_tee (4000 + 306)
+#define SYS_tee __NR_tee
+#undef __NR_vmsplice
+#define __NR_vmsplice (4000 + 307)
+#define SYS_vmsplice __NR_vmsplice
+#undef __NR_move_pages
+#define __NR_move_pages (4000 + 308)
+#define SYS_move_pages __NR_move_pages
+#undef __NR_set_robust_list
+#define __NR_set_robust_list (4000 + 309)
+#define SYS_set_robust_list __NR_set_robust_list
+#undef __NR_get_robust_list
+#define __NR_get_robust_list (4000 + 310)
+#define SYS_get_robust_list __NR_get_robust_list
+#undef __NR_kexec_load
+#define __NR_kexec_load (4000 + 311)
+#define SYS_kexec_load __NR_kexec_load
+#undef __NR_getcpu
+#define __NR_getcpu (4000 + 312)
+#define SYS_getcpu __NR_getcpu
+#undef __NR_epoll_pwait
+#define __NR_epoll_pwait (4000 + 313)
+#define SYS_epoll_pwait __NR_epoll_pwait
+#undef __NR_ioprio_set
+#define __NR_ioprio_set (4000 + 314)
+#define SYS_ioprio_set __NR_ioprio_set
+#undef __NR_ioprio_get
+#define __NR_ioprio_get (4000 + 315)
+#define SYS_ioprio_get __NR_ioprio_get
+#undef __NR_utimensat
+#define __NR_utimensat (4000 + 316)
+#define SYS_utimensat __NR_utimensat
+#undef __NR_signalfd
+#define __NR_signalfd (4000 + 317)
+#define SYS_signalfd __NR_signalfd
+#undef __NR_timerfd
+#define __NR_timerfd (4000 + 318)
+#define SYS_timerfd __NR_timerfd
+#undef __NR_eventfd
+#define __NR_eventfd (4000 + 319)
+#define SYS_eventfd __NR_eventfd
+#undef __NR_fallocate
+#define __NR_fallocate (4000 + 320)
+#define SYS_fallocate __NR_fallocate
+#undef __NR_timerfd_create
+#define __NR_timerfd_create (4000 + 321)
+#define SYS_timerfd_create __NR_timerfd_create
+#undef __NR_timerfd_gettime
+#define __NR_timerfd_gettime (4000 + 322)
+#define SYS_timerfd_gettime __NR_timerfd_gettime
+#undef __NR_timerfd_settime
+#define __NR_timerfd_settime (4000 + 323)
+#define SYS_timerfd_settime __NR_timerfd_settime
+#undef __NR_signalfd4
+#define __NR_signalfd4 (4000 + 324)
+#define SYS_signalfd4 __NR_signalfd4
+#undef __NR_eventfd2
+#define __NR_eventfd2 (4000 + 325)
+#define SYS_eventfd2 __NR_eventfd2
+#undef __NR_epoll_create1
+#define __NR_epoll_create1 (4000 + 326)
+#define SYS_epoll_create1 __NR_epoll_create1
+#undef __NR_dup3
+#define __NR_dup3 (4000 + 327)
+#define SYS_dup3 __NR_dup3
+#undef __NR_pipe2
+#define __NR_pipe2 (4000 + 328)
+#define SYS_pipe2 __NR_pipe2
+#undef __NR_inotify_init1
+#define __NR_inotify_init1 (4000 + 329)
+#define SYS_inotify_init1 __NR_inotify_init1
+#undef __NR_preadv
+#define __NR_preadv (4000 + 330)
+#define SYS_preadv __NR_preadv
+#undef __NR_pwritev
+#define __NR_pwritev (4000 + 331)
+#define SYS_pwritev __NR_pwritev
+#undef __NR_rt_tgsigqueueinfo
+#define __NR_rt_tgsigqueueinfo (4000 + 332)
+#define SYS_rt_tgsigqueueinfo __NR_rt_tgsigqueueinfo
+#undef __NR_perf_event_open
+#define __NR_perf_event_open (4000 + 333)
+#define SYS_perf_event_open __NR_perf_event_open
+#undef __NR_accept4
+#define __NR_accept4 (4000 + 334)
+#define SYS_accept4 __NR_accept4
+#undef __NR_recvmmsg
+#define __NR_recvmmsg (4000 + 335)
+#define SYS_recvmmsg __NR_recvmmsg
+#undef __NR_fanotify_init
+#define __NR_fanotify_init (4000 + 336)
+#define SYS_fanotify_init __NR_fanotify_init
+#undef __NR_fanotify_mark
+#define __NR_fanotify_mark (4000 + 337)
+#define SYS_fanotify_mark __NR_fanotify_mark
+#undef __NR_prlimit64
+#define __NR_prlimit64 (4000 + 338)
+#define SYS_prlimit64 __NR_prlimit64
+#undef __NR_name_to_handle_at
+#define __NR_name_to_handle_at (4000 + 339)
+#define SYS_name_to_handle_at __NR_name_to_handle_at
+#undef __NR_open_by_handle_at
+#define __NR_open_by_handle_at (4000 + 340)
+#define SYS_open_by_handle_at __NR_open_by_handle_at
+#undef __NR_clock_adjtime
+#define __NR_clock_adjtime (4000 + 341)
+#define SYS_clock_adjtime __NR_clock_adjtime
+#undef __NR_syncfs
+#define __NR_syncfs (4000 + 342)
+#define SYS_syncfs __NR_syncfs
+#undef __NR_sendmmsg
+#define __NR_sendmmsg (4000 + 343)
+#define SYS_sendmmsg __NR_sendmmsg
+#undef __NR_setns
+#define __NR_setns (4000 + 344)
+#define SYS_setns __NR_setns
+#undef __NR_process_vm_readv
+#define __NR_process_vm_readv (4000 + 345)
+#define SYS_process_vm_readv __NR_process_vm_readv
+#undef __NR_process_vm_writev
+#define __NR_process_vm_writev (4000 + 346)
+#define SYS_process_vm_writev __NR_process_vm_writev
+#undef __NR_kcmp
+#define __NR_kcmp (4000 + 347)
+#define SYS_kcmp __NR_kcmp
+#undef __NR_finit_module
+#define __NR_finit_module (4000 + 348)
+#define SYS_finit_module __NR_finit_module
+#undef __NR_sched_setattr
+#define __NR_sched_setattr (4000 + 349)
+#define SYS_sched_setattr __NR_sched_setattr
+#undef __NR_sched_getattr
+#define __NR_sched_getattr (4000 + 350)
+#define SYS_sched_getattr __NR_sched_getattr
+#undef __NR_renameat2
+#define __NR_renameat2 (4000 + 351)
+#define SYS_renameat2 __NR_renameat2
+#undef __NR_seccomp
+#define __NR_seccomp (4000 + 352)
+#define SYS_seccomp __NR_seccomp
+#undef __NR_getrandom
+#define __NR_getrandom (4000 + 353)
+#define SYS_getrandom __NR_getrandom
+#undef __NR_memfd_create
+#define __NR_memfd_create (4000 + 354)
+#define SYS_memfd_create __NR_memfd_create
+#undef __NR_bpf
+#define __NR_bpf (4000 + 355)
+#define SYS_bpf __NR_bpf
 #undef __NR_Linux_syscalls
-#define __NR_Linux_syscalls 240
+#define __NR_Linux_syscalls 355
 #define SYS_Linux_syscalls __NR_Linux_syscalls
 #undef __NR_O32_Linux
 #define __NR_O32_Linux 4000
 #define SYS_O32_Linux __NR_O32_Linux
 #undef __NR_O32_Linux_syscalls
-#define __NR_O32_Linux_syscalls 240
+#define __NR_O32_Linux_syscalls 355
 #define SYS_O32_Linux_syscalls __NR_O32_Linux_syscalls
 #undef __NR_64_Linux
 #define __NR_64_Linux 5000
 #define SYS_64_Linux __NR_64_Linux
 #undef __NR_64_Linux_syscalls
-#define __NR_64_Linux_syscalls 214
+#define __NR_64_Linux_syscalls 315
 #define SYS_64_Linux_syscalls __NR_64_Linux_syscalls
 #undef __NR_N32_Linux
 #define __NR_N32_Linux 6000
 #define SYS_N32_Linux __NR_N32_Linux
 #undef __NR_N32_Linux_syscalls
-#define __NR_N32_Linux_syscalls 219
+#define __NR_N32_Linux_syscalls 319
 #define SYS_N32_Linux_syscalls __NR_N32_Linux_syscalls
 
 #endif

@@ -1,4 +1,5 @@
-/* Copyright (C) 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
+/* Copyright (C) 1996, 1997, 1998, 1999, 2004, 2008
+   Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
 
@@ -22,7 +23,8 @@
 
 /* The contents of this header file was first standardized in X/Open
    System Interface and Headers Issue 2, originally coming from SysV.
-   In issue 4, version 2, it is marked as TO BE WITDRAWN.
+   In issue 4, version 2, it is marked as TO BE WITDRAWN, and it has
+   been withdrawn in SUSv3.
 
    This code shouldn't be used in any newly written code.  It is
    included only for compatibility reasons.  Use the POSIX definition
@@ -80,6 +82,7 @@
 
 __BEGIN_DECLS
 
+#if 0
 /* Interface variables.  They contain the results of the successful
    calls to `setp' and `advance'.  */
 extern char *loc1;
@@ -88,6 +91,7 @@ extern char *loc2;
 /* The use of this variable in the `advance' function is not
    supported.  */
 extern char *locs;
+#endif
 
 
 #ifndef __DO_NOT_DEFINE_COMPILE
@@ -128,8 +132,9 @@ compile (char *__restrict instring, char *__restrict expbuf,
   __expr_ptr = (regex_t *) expbuf;
   /* The remaining space in the buffer can be used for the compiled
      pattern.  */
-  __expr_ptr->buffer = expbuf + sizeof (regex_t);
-  __expr_ptr->allocated = endbuf -  (char *) __expr_ptr->buffer;
+  __expr_ptr->__REPB_PREFIX (buffer) = expbuf + sizeof (regex_t);
+  __expr_ptr->__REPB_PREFIX (allocated)
+    = endbuf - (char *) __expr_ptr->__REPB_PREFIX (buffer);
 
   while ((__ch = (GETC ())) != eof)
     {
@@ -161,7 +166,10 @@ compile (char *__restrict instring, char *__restrict expbuf,
 	}
       __input_buffer[__current_size++] = __ch;
     }
-  __input_buffer[__current_size++] = '\0';
+  if (__current_size)
+    __input_buffer[__current_size++] = '\0';
+  else
+    __input_buffer = "";
 
   /* Now compile the pattern.  */
   __error = regcomp (__expr_ptr, __input_buffer, REG_NEWLINE);
@@ -197,11 +205,13 @@ compile (char *__restrict instring, char *__restrict expbuf,
       }
 
   /* Everything is ok.  */
-  RETURN ((char *) (__expr_ptr->buffer + __expr_ptr->used));
+  RETURN ((char *) (__expr_ptr->__REPB_PREFIX (buffer)
+		    + __expr_ptr->__REPB_PREFIX (used)));
 }
 #endif
 
 
+#if 0
 /* Find the next match in STRING.  The compiled regular expression is
    found in the buffer starting at EXPBUF.  `loc1' will return the
    first character matched and `loc2' points to the next unmatched
@@ -214,6 +224,7 @@ extern int step (__const char *__restrict __string,
    position of the first unmatched character.  */
 extern int advance (__const char *__restrict __string,
 		    __const char *__restrict __expbuf) __THROW;
+#endif
 
 
 __END_DECLS

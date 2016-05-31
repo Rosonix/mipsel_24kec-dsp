@@ -5,10 +5,17 @@
  * 2001 Copyright (C) Steven Whitehouse
  *            New nbd_end_request() for compatibility with new linux block
  *            layer code.
+ * 2003/06/24 Louis D. Langholtz <ldl@aros.net>
+ *            Removed unneeded blksize_bits field from nbd_device struct.
+ *            Cleanup PARANOIA usage & code.
+ * 2004/02/19 Paul Clements
+ *            Removed PARANOIA, plus various cleanup and comments
  */
 
 #ifndef LINUX_NBD_H
 #define LINUX_NBD_H
+
+#include <linux/types.h>
 
 #define NBD_SET_SOCK	_IO( 0xab, 0 )
 #define NBD_SET_BLKSIZE	_IO( 0xab, 1 )
@@ -19,88 +26,53 @@
 #define NBD_PRINT_DEBUG	_IO( 0xab, 6 )
 #define NBD_SET_SIZE_BLOCKS	_IO( 0xab, 7 )
 #define NBD_DISCONNECT  _IO( 0xab, 8 )
+#define NBD_SET_TIMEOUT _IO( 0xab, 9 )
+#define NBD_SET_FLAGS   _IO( 0xab, 10)
 
-#ifdef MAJOR_NR
-
-#include <linux/locks.h>
-#include <asm/semaphore.h>
-
-#define LOCAL_END_REQUEST
-
-#include <linux/blk.h>
-
-#ifdef PARANOIA
-extern int requests_in;
-extern int requests_out;
-#endif
-
-static void
-nbd_end_request(struct request *req)
-{
-	struct buffer_head *bh;
-	unsigned nsect;
-	unsigned long flags;
-	int uptodate = (req->errors == 0) ? 1 : 0;
-
-#ifdef PARANOIA
-	requests_out++;
-#endif
-	spin_lock_irqsave(&io_request_lock, flags);
-	while((bh = req->bh) != NULL) {
-		nsect = bh->b_size >> 9;
-		blk_finished_io(nsect);
-		req->bh = bh->b_reqnext;
-		bh->b_reqnext = NULL;
-		bh->b_end_io(bh, uptodate);
-	}
-	blkdev_release_request(req);
-	spin_unlock_irqrestore(&io_request_lock, flags);
-}
-
-#define MAX_NBD 128
-
-struct nbd_device {
-	int refcnt;	
-	int flags;
-	int harderror;		/* Code of hard error			*/
-#define NBD_READ_ONLY 0x0001
-#define NBD_WRITE_NOCHK 0x0002
-	struct socket * sock;
-	struct file * file; 		/* If == NULL, device is not ready, yet	*/
-	int magic;			/* FIXME: not if debugging is off	*/
-	spinlock_t queue_lock;
-	struct list_head queue_head;	/* Requests are added here...			*/
-	struct semaphore tx_lock;
+enum {
+	NBD_CMD_READ = 0,
+	NBD_CMD_WRITE = 1,
+	NBD_CMD_DISC = 2,
+	NBD_CMD_FLUSH = 3,
+	NBD_CMD_TRIM = 4
 };
-#endif
 
-/* This now IS in some kind of include file...	*/
+/* values for flags field */
+#define NBD_FLAG_HAS_FLAGS    (1 << 0) /* nbd-server supports flags */
+#define NBD_FLAG_READ_ONLY    (1 << 1) /* device is read-only */
+#define NBD_FLAG_SEND_FLUSH   (1 << 2) /* can flush writeback cache */
+/* there is a gap here to match userspace */
+#define NBD_FLAG_SEND_TRIM    (1 << 5) /* send trim/discard */
 
-/* These are send over network in request/reply magic field */
+#define nbd_cmd(req) ((req)->cmd[0])
+
+/* userspace doesn't need the nbd_device structure */
+
+/* These are sent over the network in the request/reply magic fields */
 
 #define NBD_REQUEST_MAGIC 0x25609513
 #define NBD_REPLY_MAGIC 0x67446698
 /* Do *not* use magics: 0x12560953 0x96744668. */
 
 /*
- * This is packet used for communication between client and
+ * This is the packet used for communication between client and
  * server. All data are in network byte order.
  */
 struct nbd_request {
-	u32 magic;
-	u32 type;	/* == READ || == WRITE 	*/
+	__be32 magic;
+	__be32 type;	/* == READ || == WRITE 	*/
 	char handle[8];
-	u64 from;
-	u32 len;
-}
-#ifdef __GNUC__
-	__attribute__ ((packed))
-#endif
-;
+	__be64 from;
+	__be32 len;
+} __attribute__((packed));
 
+/*
+ * This is the reply packet that nbd-server sends back to the client after
+ * it has completed an I/O request (or an error occurs).
+ */
 struct nbd_reply {
-	u32 magic;
-	u32 error;		/* 0 = ok, else error	*/
+	__be32 magic;
+	__be32 error;		/* 0 = ok, else error	*/
 	char handle[8];		/* handle you got from request	*/
 };
-#endif
+#endif /* LINUX_NBD_H */

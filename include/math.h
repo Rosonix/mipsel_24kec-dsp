@@ -1,5 +1,6 @@
 /* Declarations for math functions.
-   Copyright (C) 1991,92,93,95,96,97,98,99,2001 Free Software Foundation, Inc.
+   Copyright (C) 1991-1993, 1995-1999, 2001, 2002, 2004, 2006
+   Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -31,11 +32,17 @@ __BEGIN_DECLS
 /* Get machine-dependent HUGE_VAL value (returned on overflow).
    On all IEEE754 machines, this is +Infinity.  */
 #include <bits/huge_val.h>
+#ifdef __USE_ISOC99
+# include <bits/huge_valf.h>
+# include <bits/huge_vall.h>
+
+/* Get machine-dependent INFINITY value.  */
+# include <bits/inf.h>
 
 /* Get machine-dependent NAN value (returned for some domain errors).  */
-#ifdef	 __USE_ISOC99
 # include <bits/nan.h>
-#endif
+#endif /* __USE_ISOC99 */
+
 /* Get general and ISO C99 specific information.  */
 #include <bits/mathdef.h>
 
@@ -45,60 +52,123 @@ __BEGIN_DECLS
    so we can easily declare each function as both `name' and `__name',
    and can declare the float versions `namef' and `__namef'.  */
 
-#define __MATHCALL(function,suffix, args)	\
-  __MATHDECL (_Mdouble_,function,suffix, args)
-#define __MATHDECL(type, function,suffix, args) \
-  __MATHDECL_1(type, function,suffix, args); \
-  __MATHDECL_1(type, __CONCAT(__,function),suffix, args)
-#define __MATHCALLX(function,suffix, args, attrib)	\
-  __MATHDECLX (_Mdouble_,function,suffix, args, attrib)
-#define __MATHDECLX(type, function,suffix, args, attrib) \
-  __MATHDECL_1(type, function,suffix, args) __attribute__ (attrib); \
-  __MATHDECL_1(type, __CONCAT(__,function),suffix, args) __attribute__ (attrib)
-#define __MATHDECL_1(type, function,suffix, args) \
-  extern type __MATH_PRECNAME(function,suffix) args __THROW
+#define __MATHDECL_1(type,function,suffix,args) \
+	extern type __MATH_PRECNAME(function,suffix) args __THROW
 
-#define _Mdouble_ 		double
-#define __MATH_PRECNAME(name,r)	__CONCAT(name,r)
+#define __MATHDECL(type,function,suffix,args) \
+	__MATHDECL_1(type,function,suffix,args);
+
+#define __MATHCALL(function,suffix,args) \
+	__MATHDECL(_Mdouble_,function,suffix,args)
+
+#define __MATHDECLX(type,function,suffix,args,attrib) \
+	__MATHDECL_1(type,function,suffix,args) __attribute__ (attrib); \
+	__MATH_maybe_libm_hidden_proto(function)
+
+#define __MATHCALLX(function,suffix,args,attrib) \
+	__MATHDECLX(_Mdouble_,function,suffix,args,attrib)
+
+/* Decls which are also used internally in libm.
+   Only the main variant is used internally, no need to try to avoid relocs
+   for the {l,f} variants.  */
+#define __MATHDECLI(type,function,suffix,args) \
+	__MATHDECL_1(type,function,suffix,args); \
+	__MATH_maybe_libm_hidden_proto(function)
+
+#define __MATHCALLI(function,suffix,args) \
+	__MATHDECLI(_Mdouble_,function,suffix,args)
+
+/* Private helpers for purely macro impls below.
+   Only make __foo{,f,l} visible but not (the macro-only) foo.  */
+# define __MATHDECL_PRIV(type,function,suffix,args,attrib) \
+	__MATHDECL_1(type,__CONCAT(__,function),suffix,args) __attribute__ (attrib);
+
+
+/* Include the file of declarations, declaring double versions */
+
+# define __MATH_maybe_libm_hidden_proto(x)
+#define _Mdouble_		 double
+#define __MATH_PRECNAME(name,r)  __CONCAT(name,r)
+#define _Mdouble_BEGIN_NAMESPACE __BEGIN_NAMESPACE_STD
+#define _Mdouble_END_NAMESPACE   __END_NAMESPACE_STD
 #include <bits/mathcalls.h>
 #undef	_Mdouble_
-#undef	__MATH_PRECNAME
+#undef _Mdouble_BEGIN_NAMESPACE
+#undef _Mdouble_END_NAMESPACE
+#undef __MATH_PRECNAME
+#undef __MATH_maybe_libm_hidden_proto
+
 
 #if defined __USE_MISC || defined __USE_ISOC99
-
 
 /* Include the file of declarations again, this time using `float'
    instead of `double' and appending f to each function name.  */
 
+# define __MATH_maybe_libm_hidden_proto(x)
 # ifndef _Mfloat_
 #  define _Mfloat_		float
 # endif
-# define _Mdouble_ 		_Mfloat_
+# define _Mdouble_		_Mfloat_
 # ifdef __STDC__
 #  define __MATH_PRECNAME(name,r) name##f##r
 # else
 #  define __MATH_PRECNAME(name,r) name/**/f/**/r
 # endif
+# define _Mdouble_BEGIN_NAMESPACE __BEGIN_NAMESPACE_C99
+# define _Mdouble_END_NAMESPACE   __END_NAMESPACE_C99
 # include <bits/mathcalls.h>
 # undef	_Mdouble_
+# undef _Mdouble_BEGIN_NAMESPACE
+# undef _Mdouble_END_NAMESPACE
 # undef	__MATH_PRECNAME
+# undef __MATH_maybe_libm_hidden_proto
 
-# if (__STDC__ - 0 || __GNUC__ - 0) && !defined __NO_LONG_DOUBLE_MATH
+
+# if (defined __STDC__ || defined __GNUC__) \
+     && (!defined __NO_LONG_DOUBLE_MATH || defined __LDBL_COMPAT)
+#  ifdef __LDBL_COMPAT
+
+#   ifdef __USE_ISOC99
+extern float __nldbl_nexttowardf (float __x, long double __y) __THROW
+			__attribute__ ((__const__));
+#    ifdef __REDIRECT_NTH
+extern float __REDIRECT_NTH (nexttowardf, (float __x, long double __y), __nldbl_nexttowardf)
+			__attribute__ ((__const__));
+extern double __REDIRECT_NTH (nexttoward, (double __x, long double __y), nextafter)
+			__attribute__ ((__const__));
+extern long double __REDIRECT_NTH (nexttowardl, (long double __x, long double __y), nextafter)
+			__attribute__ ((__const__));
+#    endif
+#   endif
+
 /* Include the file of declarations again, this time using `long double'
    instead of `double' and appending l to each function name.  */
 
+#   undef __MATHDECL_1
+#   define __MATHDECL_2(type,function,suffix,args,alias) \
+	extern type __REDIRECT_NTH(__MATH_PRECNAME(function,suffix),args,alias)
+#   define __MATHDECL_1(type,function,suffix,args) \
+	__MATHDECL_2(type,function,suffix,args,__CONCAT(function,suffix))
+#  endif
+
+#  define __MATH_maybe_libm_hidden_proto(x)
 #  ifndef _Mlong_double_
 #   define _Mlong_double_	long double
 #  endif
-#  define _Mdouble_ 		_Mlong_double_
+#  define _Mdouble_		_Mlong_double_
 #  ifdef __STDC__
 #   define __MATH_PRECNAME(name,r) name##l##r
 #  else
 #   define __MATH_PRECNAME(name,r) name/**/l/**/r
 #  endif
+#  define _Mdouble_BEGIN_NAMESPACE __BEGIN_NAMESPACE_C99
+#  define _Mdouble_END_NAMESPACE   __END_NAMESPACE_C99
 #  include <bits/mathcalls.h>
 #  undef _Mdouble_
+#  undef _Mdouble_BEGIN_NAMESPACE
+#  undef _Mdouble_END_NAMESPACE
 #  undef __MATH_PRECNAME
+#  undef __MATH_maybe_libm_hidden_proto
 
 # endif /* __STDC__ || __GNUC__ */
 
@@ -115,7 +185,7 @@ extern int signgam;
 
 
 /* ISO C99 defines some generic macros which work on any data type.  */
-#if __USE_ISOC99
+#if defined(__USE_ISOC99) || defined(__USE_BSD)
 
 /* Get the architecture specific values describing the floating-point
    evaluation.  The following symbols will get defined:
@@ -235,6 +305,11 @@ enum
 
 #endif /* Use ISO C99.  */
 
+/* BSD compat */
+#define finite(x) __finite(x)
+#define finitef(x) __finitef(x)
+#define finitel(x) __finitel(x)
+
 #ifdef	__USE_MISC
 /* Support for various different standard error handling behaviors.  */
 typedef enum
@@ -294,8 +369,10 @@ extern int matherr (struct exception *__exc);
 #else	/* !SVID */
 
 # ifdef __USE_XOPEN
+#  ifdef __UCLIBC_SUSV4_LEGACY__
 /* X/Open wants another strange constant.  */
 #  define MAXFLOAT	3.40282347e+38F
+#  endif
 # endif
 
 #endif	/* SVID */
@@ -323,7 +400,7 @@ extern int matherr (struct exception *__exc);
    GNU extension.  Provide enough digits for the 128-bit IEEE quad.  */
 #ifdef __USE_GNU
 # define M_El		2.7182818284590452353602874713526625L  /* e */
-# define M_LOG2El	1.4426950408889634073599246810018922L  /* log_2 e */
+# define M_LOG2El	1.4426950408889634073599246810018921L  /* log_2 e */
 # define M_LOG10El	0.4342944819032518276511289189166051L  /* log_10 e */
 # define M_LN2l		0.6931471805599453094172321214581766L  /* log_e 2 */
 # define M_LN10l	2.3025850929940456840179914546843642L  /* log_e 10 */
@@ -345,18 +422,28 @@ extern int matherr (struct exception *__exc);
 # define __NO_MATH_INLINES	1
 #endif
 
+#if defined __USE_ISOC99 && __GNUC_PREREQ(2,97)
+/* ISO C99 defines some macros to compare number while taking care for
+   unordered numbers.  Many FPUs provide special instructions to support
+   these operations.  Generic support in GCC for these as builtins went
+   in before 3.0.0, but not all cpus added their patterns.  We define
+   versions that use the builtins here, and <bits/mathinline.h> will
+   undef/redefine as appropriate for the specific GCC version in use.  */
+# define isgreater(x, y)	__builtin_isgreater(x, y)
+# define isgreaterequal(x, y)	__builtin_isgreaterequal(x, y)
+# define isless(x, y)		__builtin_isless(x, y)
+# define islessequal(x, y)	__builtin_islessequal(x, y)
+# define islessgreater(x, y)	__builtin_islessgreater(x, y)
+# define isunordered(u, v)	__builtin_isunordered(u, v)
+#endif
+
 /* Get machine-dependent inline versions (if there are any).  */
 #ifdef __USE_EXTERN_INLINES
 # include <bits/mathinline.h>
 #endif
 
-
-#if __USE_ISOC99
-/* ISO C99 defines some macros to compare number while taking care
-   for unordered numbers.  Since many FPUs provide special
-   instructions to support these operations and these tests are
-   defined in <bits/mathinline.h>, we define the generic macros at
-   this late point and only if they are not defined yet.  */
+#ifdef __USE_ISOC99
+/* If we've still got undefined comparison macros, provide defaults.  */
 
 /* Return nonzero value if X is greater than Y.  */
 # ifndef isgreater

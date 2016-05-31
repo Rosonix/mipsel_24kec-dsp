@@ -9,7 +9,7 @@
  *
  * Authors:	Original taken from Berkeley UNIX 4.3, (c) UCB 1986-1988
  *		Portions taken from the KA9Q/NOS (v2.00m PA0GRI) source.
- *		Ross Biro, <bir7@leland.Stanford.Edu>
+ *		Ross Biro
  *		Fred N. van Kempen, <waltje@uWalt.NL.Mugnet.ORG>
  *		Florian La Roche,
  *		Jonathan Layes <layes@loran.com>
@@ -40,7 +40,7 @@
 #define ARPHRD_METRICOM	23		/* Metricom STRIP (new IANA id)	*/
 #define	ARPHRD_IEEE1394	24		/* IEEE 1394 IPv4 - RFC 2734	*/
 #define ARPHRD_EUI64	27		/* EUI-64                       */
-#define ARPHRD_INFINIBAND	32		/* InfiniBand                   */
+#define ARPHRD_INFINIBAND 32		/* InfiniBand			*/
 
 /* Dummy types for non ARP hardware */
 #define ARPHRD_SLIP	256
@@ -52,6 +52,7 @@
 #define ARPHRD_ROSE	270
 #define ARPHRD_X25	271		/* CCITT X.25			*/
 #define ARPHRD_HWX25	272		/* Boards with X.25 in firmware	*/
+#define ARPHRD_CAN	280		/* Controller Area Network      */
 #define ARPHRD_PPP	512
 #define ARPHRD_CISCO	513		/* Cisco HDLC	 		*/
 #define ARPHRD_HDLC	ARPHRD_CISCO
@@ -60,7 +61,7 @@
 #define ARPHRD_RAWHDLC	518		/* Raw HDLC			*/
 
 #define ARPHRD_TUNNEL	768		/* IPIP tunnel			*/
-#define ARPHRD_TUNNEL6	769		/* IPIP6 tunnel			*/
+#define ARPHRD_TUNNEL6	769		/* IP6IP6 tunnel       		*/
 #define ARPHRD_FRAD	770             /* Frame Relay Access Device    */
 #define ARPHRD_SKIP	771		/* SKIP vif			*/
 #define ARPHRD_LOOPBACK	772		/* Loopback device		*/
@@ -84,6 +85,16 @@
 #define ARPHRD_IEEE802_TR 800		/* Magic type ident for TR	*/
 #define ARPHRD_IEEE80211 801		/* IEEE 802.11			*/
 #define ARPHRD_IEEE80211_PRISM 802	/* IEEE 802.11 + Prism2 header  */
+#define ARPHRD_IEEE80211_RADIOTAP 803	/* IEEE 802.11 + radiotap header */
+#define ARPHRD_IEEE802154	  804
+#define ARPHRD_IEEE802154_MONITOR 805	/* IEEE 802.15.4 network monitor */
+
+#define ARPHRD_PHONET	820		/* PhoNet media type		*/
+#define ARPHRD_PHONET_PIPE 821		/* PhoNet pipe header		*/
+#define ARPHRD_CAIF	822		/* CAIF media type		*/
+#define ARPHRD_IP6GRE	823		/* GRE over IPv6		*/
+#define ARPHRD_NETLINK	824		/* Netlink header		*/
+#define ARPHRD_6LOWPAN	825		/* IPv6 over LoWPAN             */
 
 #define ARPHRD_VOID	  0xFFFF	/* Void type, nothing is known */
 #define ARPHRD_NONE	  0xFFFE	/* zero header length */
@@ -127,13 +138,12 @@ struct arpreq_old {
  *	This structure defines an ethernet arp header.
  */
 
-struct arphdr
-{
-	unsigned short	ar_hrd;		/* format of hardware address	*/
-	unsigned short	ar_pro;		/* format of protocol address	*/
+struct arphdr {
+	__be16		ar_hrd;		/* format of hardware address	*/
+	__be16		ar_pro;		/* format of protocol address	*/
 	unsigned char	ar_hln;		/* length of hardware address	*/
 	unsigned char	ar_pln;		/* length of protocol address	*/
-	unsigned short	ar_op;		/* ARP opcode (command)		*/
+	__be16		ar_op;		/* ARP opcode (command)		*/
 
 #if 0
 	 /*
@@ -147,4 +157,5 @@ struct arphdr
 
 };
 
-#endif	/* _LINUX_IF_ARP_H */
+
+#endif /* _LINUX_IF_ARP_H */

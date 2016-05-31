@@ -1,95 +1,40 @@
+/*
+ * Copyright (C) 1999-2002 Vojtech Pavlik
+*
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published by
+ * the Free Software Foundation.
+ */
 #ifndef _SERIO_H
 #define _SERIO_H
 
-/*
- * $Id: serio.h,v 1.11 2001/05/29 02:58:50 jsimmons Exp $
- *
- * Copyright (C) 1999 Vojtech Pavlik
- *
- * Sponsored by SuSE
- */
-
-/*
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or 
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- * 
- * Should you need to contact me, the author, you can do so either by
- * e-mail - mail your message to <vojtech@ucw.cz>, or by paper mail:
- * Vojtech Pavlik, Ucitelska 1576, Prague 8, 182 00 Czech Republic
- */
-
-/*
- * The serial port set type ioctl.
- */
 
 #include <linux/ioctl.h>
+
 #define SPIOCSTYPE	_IOW('q', 0x01, unsigned long)
 
-struct serio;
 
-struct serio {
-
-	void *private;
-	void *driver;
-
-	unsigned long type;
-	int number;
-
-	int (*write)(struct serio *, unsigned char);
-	int (*open)(struct serio *);
-	void (*close)(struct serio *);
-
-	struct serio_dev *dev;
-
-	struct serio *next;
-};
-
-struct serio_dev {
-
-	void *private;
-
-	void (*interrupt)(struct serio *, unsigned char, unsigned int);
-	void (*connect)(struct serio *, struct serio_dev *dev);
-	void (*disconnect)(struct serio *);
-
-	struct serio_dev *next;
-};
-
-int serio_open(struct serio *serio, struct serio_dev *dev);
-void serio_close(struct serio *serio);
-void serio_rescan(struct serio *serio);
-
-void serio_register_port(struct serio *serio);
-void serio_unregister_port(struct serio *serio);
-void serio_register_device(struct serio_dev *dev);
-void serio_unregister_device(struct serio_dev *dev);
-
-static __inline__ int serio_write(struct serio *serio, unsigned char data)
-{
-	return serio->write(serio, data);
-}
-
+/*
+ * bit masks for use in "interrupt" flags (3rd argument)
+ */
 #define SERIO_TIMEOUT	1
 #define SERIO_PARITY	2
+#define SERIO_FRAME	4
 
-#define SERIO_TYPE	0xff000000UL
-#define SERIO_XT	0x00000000UL
-#define SERIO_8042	0x01000000UL
-#define SERIO_RS232	0x02000000UL
-#define SERIO_HIL_MLC	0x03000000UL
+/*
+ * Serio types
+ */
+#define SERIO_XT	0x00
+#define SERIO_8042	0x01
+#define SERIO_RS232	0x02
+#define SERIO_HIL_MLC	0x03
+#define SERIO_PS_PSTHRU	0x05
+#define SERIO_8042_XL	0x06
 
-#define SERIO_PROTO	0xFFUL
+/*
+ * Serio protocols
+ */
+#define SERIO_UNKNOWN	0x00
 #define SERIO_MSC	0x01
 #define SERIO_SUN	0x02
 #define SERIO_MS	0x03
@@ -97,6 +42,7 @@ static __inline__ int serio_write(struct serio *serio, unsigned char data)
 #define SERIO_MZ	0x05
 #define SERIO_MZP	0x06
 #define SERIO_MZPP	0x07
+#define SERIO_VSXXXAA	0x08
 #define SERIO_SUNKBD	0x10
 #define SERIO_WARRIOR	0x18
 #define SERIO_SPACEORB	0x19
@@ -109,9 +55,27 @@ static __inline__ int serio_write(struct serio *serio, unsigned char data)
 #define SERIO_STOWAWAY	0x20
 #define SERIO_H3600	0x21
 #define SERIO_PS2SER	0x22
+#define SERIO_TWIDKBD	0x23
+#define SERIO_TWIDJOY	0x24
 #define SERIO_HIL	0x25
+#define SERIO_SNES232	0x26
+#define SERIO_SEMTECH	0x27
+#define SERIO_LKKBD	0x28
+#define SERIO_ELO	0x29
+#define SERIO_MICROTOUCH	0x30
+#define SERIO_PENMOUNT	0x31
+#define SERIO_TOUCHRIGHT	0x32
+#define SERIO_TOUCHWIN	0x33
+#define SERIO_TAOSEVM	0x34
+#define SERIO_FUJITSU	0x35
+#define SERIO_ZHENHUA	0x36
+#define SERIO_INEXIO	0x37
+#define SERIO_TOUCHIT213	0x38
+#define SERIO_W8001	0x39
+#define SERIO_DYNAPRO	0x3a
+#define SERIO_HAMPSHIRE	0x3b
+#define SERIO_PS2MULT	0x3c
+#define SERIO_TSC40	0x3d
+#define SERIO_WACOM_IV	0x3e
 
-#define SERIO_ID	0xff00UL
-#define SERIO_EXTRA	0xff0000UL
-
-#endif
+#endif /* _SERIO_H */

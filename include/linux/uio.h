@@ -1,8 +1,3 @@
-#ifndef __LINUX_UIO_H
-#define __LINUX_UIO_H
-
-#include <linux/types.h>
-
 /*
  *	Berkeley style UIO structures	-	Alan Cox 1994.
  *
@@ -11,14 +6,16 @@
  *		as published by the Free Software Foundation; either version
  *		2 of the License, or (at your option) any later version.
  */
+#ifndef __LINUX_UIO_H
+#define __LINUX_UIO_H
 
 
-/* A word of warning: Our uio structure will clash with the C library one (which is now obsolete). Remove the C
-   library one from sys/uio.h if you have a very old library set */
+#include <linux/types.h>
+
 
 struct iovec
 {
-	void *iov_base;		/* BSD uses caddr_t (1003.1g requires void *) */
+	void *iov_base;	/* BSD uses caddr_t (1003.1g requires void *) */
 	__kernel_size_t iov_len; /* Must be size_t (1003.1g) */
 };
 
@@ -28,10 +25,6 @@ struct iovec
  
 #define UIO_FASTIOV	8
 #define UIO_MAXIOV	1024
-#if 0
-#define UIO_MAXIOV	16	/* Maximum iovec's in one operation 
-				   16 matches BSD */
-                                /* Beg pardon: BSD has 1024 --ANK */
-#endif
 
-#endif
+
+#endif /* __LINUX_UIO_H */
