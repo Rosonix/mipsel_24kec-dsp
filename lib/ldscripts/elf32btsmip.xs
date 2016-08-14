@@ -1,14 +1,19 @@
 /* Script for ld --shared: link shared library */
+/* Copyright (C) 2014 Free Software Foundation, Inc.
+   Copying and distribution of this script, with or without modification,
+   are permitted in any medium without royalty provided the copyright
+   notice and this notice are preserved.  */
 OUTPUT_FORMAT("elf32-tradbigmips", "elf32-tradbigmips",
 	      "elf32-tradlittlemips")
 OUTPUT_ARCH(mips)
 ENTRY(__start)
-SEARCH_DIR("=/usr/local/lib"); SEARCH_DIR("=/lib"); SEARCH_DIR("=/usr/lib");
+SEARCH_DIR("=/home/changyuheng/workspace/buildroot/buildroot-2016.05/output/host/usr/mipsel-buildroot-linux-musl/lib"); SEARCH_DIR("=/usr/local/lib"); SEARCH_DIR("=/lib"); SEARCH_DIR("=/usr/lib");
 SECTIONS
 {
   /* Read-only sections, merged into text segment: */
   . = SEGMENT_START("text-segment", 0) + SIZEOF_HEADERS;
-  .reginfo        : { *(.reginfo) }
+  .MIPS.abiflags   : { *(.MIPS.abiflags) }
+  .reginfo         : { *(.reginfo) }
   .note.gnu.build-id : { *(.note.gnu.build-id) }
   .dynamic        : { *(.dynamic) }
   .hash           : { *(.hash) }
